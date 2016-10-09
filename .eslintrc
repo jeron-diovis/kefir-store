@@ -29,8 +29,9 @@
     ],
     "semi": [
       1,
-      "always"
+      "never"
     ],
+    "eol-last": [1, "always"],
     "no-var": 1,
     "prefer-const": 1,
     "space-infix-ops": 1,
@@ -61,6 +62,7 @@
     "no-script-url": 2,
     "no-self-compare": 2,
     "no-multi-spaces": 2,
+    "no-unexpected-multiline": 2,
     "linebreak-style": [
       2,
       "unix"
