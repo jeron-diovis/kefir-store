@@ -1,11 +1,11 @@
 {
-  "name": "package-boilerplate",
+  "name": "kefir-store",
   "version": "0.0.1",
   "description": "Basic boilerplate",
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jeron-diovis/package-boilerplate"
+    "url": "https://github.com/jeron-diovis/kefir-store"
   },
   "files": [
     "dist",
@@ -40,11 +40,17 @@
     "eslint": "^3.7.1",
     "eslint-loader": "^1.5.0",
     "eslint-watch": "^2.1.14",
+    "immutable": "^3.8.1",
+    "kefir-bus": "^2.2.1",
     "mocha": "^3.1.0",
     "parallelshell": "^2.0.0",
     "sinon": "^1.17.6",
     "webpack": "^1.13.2",
     "webpack-error-notification": "^0.1.6",
     "webpack-info-plugin": "^0.1.0"
+  },
+  "dependencies": {
+    "kefir": "^3.5.2",
+    "lodash": "^4.16.4"
   }
 }

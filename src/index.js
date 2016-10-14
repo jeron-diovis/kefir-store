@@ -1,1 +1,1 @@
-export default "it works"
+export { default as stream } from "./stream"

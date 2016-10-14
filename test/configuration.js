@@ -1,0 +1,43 @@
+import stream from "../src/stream"
+import Immutable from "immutable"
+import { setConfig } from "../src/config"
+import defaultConfig from "../src/config/default"
+
+const immutableConfig = {
+  getDefaultState: () => Immutable.OrderedMap(),
+  defaultSetter: prop => (state, value) => state.setIn(prop.split("."), value),
+}
+
+describe("configuration", () => {
+
+  before(() => setConfig(immutableConfig))
+
+  after(() => setConfig(defaultConfig))
+
+  describe("ImmutableJS", () => {
+    it("default state", () => {
+      const store = stream()
+      const spy = sinon.spy()
+      store.onValue(spy)
+
+      const state = spy.lastCall.args[0]
+      assert(Immutable.OrderedMap.isOrderedMap(state))
+      assert.deepEqual(state.toJS(), {})
+    })
+
+    it("default update named prop", () => {
+      const subject = Subject()
+      const store = stream([
+        [ subject.stream, "deep.nested.value" ]
+      ])
+
+      const spy = sinon.spy()
+      store.onValue(spy)
+
+      subject.handler("value")
+
+      const state = spy.lastCall.args[0]
+      assert.deepEqual(state.toJS(), { deep: { nested: { value: "value" }}})
+    })
+  })
+})

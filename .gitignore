@@ -8,4 +8,4 @@ pids
 coverage/
 node_modules/
 dist/
-lib/
+/lib/

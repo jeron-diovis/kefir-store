@@ -1,0 +1,36 @@
+import Kefir from "kefir"
+import * as F from "./lib/func_utils"
+import * as S from "./lib/stream_utils"
+import { getConfig } from "./config"
+
+const transformWith = ($, fn) => fn($)
+
+const createInputStream = state$ => ([ input$, reducer ]) => {
+  if (typeof reducer === "string") {
+    reducer = getConfig().defaultSetter(reducer)
+  }
+
+  if (typeof reducer === "function") {
+    return state$.sampledBy(input$, reducer)
+  }
+
+  if (F.isStream(reducer)) {
+    return S.withLatestFrom(
+      Kefir.constant(state$.sampledBy(input$, Array.of)),
+      reducer,
+      transformWith
+    ).flatMap()
+  }
+
+  throw new Error(`[kefir-store] Invalid reducer
+    Must be either string, or function(state, patch) -> newState,
+    or Observable<function(Observable<[state, patch]>) -> Observable<newState>>
+  `)
+}
+
+export default function Stream(config = [], initialState = getConfig().getDefaultState()) {
+  const pool = Kefir.pool()
+  const state$ = pool.toProperty(F.constant(initialState))
+  pool.plug(Kefir.merge(config.map(createInputStream(state$))))
+  return state$
+}
