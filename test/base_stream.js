@@ -10,6 +10,16 @@ describe("basic stream", () => {
     assert.deepEqual(spy.getCall(0).args[0], {})
   })
 
+  it("should require Observable as input", () => {
+    const subject = Subject()
+    const setup = () => Stream([
+      [ 42, () => {} ]
+    ])
+    assert.throws(setup, /\[kefir-store\] Input must be an Observable/)
+  })
+
+
+
   describe("reducers", () => {
     it("as function: should update state in custom way", () => {
       const subject = Subject()
@@ -78,5 +88,14 @@ describe("basic stream", () => {
       ])
       assert.throws(setup, /\[kefir-store\] Invalid reducer/)
     })
+  })
+
+  it("should accept initial state as second param", () => {
+    const store = Stream([], { value: "initial value" })
+    const spy = sinon.spy()
+    store.onValue(spy)
+
+    assert(spy.calledOnce)
+    assert.deepEqual(spy.getCall(0).args[0], { value: "initial value" })
   })
 })

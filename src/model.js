@@ -3,6 +3,8 @@ import stream from "./stream"
 import Bus from "kefir-bus"
 import * as F from "./lib/func_utils"
 
+// ---
+
 const Subject = (init = F.id) => {
   const bus = Bus()
   return {
@@ -16,6 +18,8 @@ Subject.is = obj => (
   && F.isStream(obj.stream)
   && typeof obj.handler === "function"
 )
+
+// ---
 
 const setFirst = fn => ([ first, ...rest ]) => [ fn(first), ...rest ]
 const setLast = fn => list => list.concat(fn(list.pop()))
@@ -45,6 +49,8 @@ const parseCompositeInput = setLast(arg => {
     [ String, Function|Observable|Subject ]
   `)
 })
+
+// ---
 
 export default function Model(cfg = [], ...args) {
   const handlers = {}
@@ -82,12 +88,14 @@ export default function Model(cfg = [], ...args) {
   }))
 
   return {
-    stream: stream(config, ...args),
+    stream$: stream(config, ...args),
     handlers,
   }
 }
 
+// ---
+
 Model.compact = (...args) => {
-  const { stream, handlers } = Model(...args)
-  return stream.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
+  const { stream$, handlers } = Model(...args)
+  return stream$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
 }

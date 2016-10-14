@@ -6,6 +6,10 @@ import { getConfig } from "./config"
 const transformWith = ($, fn) => fn($)
 
 const createInputStream = state$ => ([ input$, reducer ]) => {
+  if (!F.isStream(input$)) {
+    throw new Error("[kefir-store] Input must be an Observable")
+  }
+
   if (typeof reducer === "string") {
     reducer = getConfig().defaultSetter(reducer)
   }
