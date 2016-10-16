@@ -9,10 +9,10 @@ describe("model :: base", () => {
     assert.deepEqual(model.handlers, {})
   })
 
-  describe("compact", () => {
+  describe("asStream", () => {
     it("should be an Observable<{ state, handlers }>", () => {
-      assert.isFunction(Model.compact)
-      const model = Model.compact(
+      assert.isFunction(Model.asStream)
+      const model = Model.asStream(
         [ [ "setValue", "value" ] ],
         { value: "initial value" }
       )

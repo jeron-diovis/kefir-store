@@ -123,7 +123,7 @@ export default function Model(cfg = [], ...args) {
 
 // ---
 
-Model.compact = (...args) => {
+Model.asStream = (...args) => {
   const { stream$, handlers } = Model(...args)
   return stream$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
 }
