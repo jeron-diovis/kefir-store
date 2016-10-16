@@ -116,7 +116,7 @@ export default function Model(cfg = [], ...args) {
   })
 
   return {
-    stream$: Stream(config, ...args),
+    state$: Stream(config, ...args),
     handlers,
   }
 }
@@ -124,6 +124,6 @@ export default function Model(cfg = [], ...args) {
 // ---
 
 Model.asStream = (...args) => {
-  const { stream$, handlers } = Model(...args)
-  return stream$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
+  const { state$, handlers } = Model(...args)
+  return state$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
 }

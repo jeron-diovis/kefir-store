@@ -5,7 +5,7 @@ describe("model :: base", () => {
     const model = Model()
 
     assert.isObject(model)
-    assert.instanceOf(model.stream$, Kefir.Observable)
+    assert.instanceOf(model.state$, Kefir.Observable)
     assert.deepEqual(model.handlers, {})
   })
 

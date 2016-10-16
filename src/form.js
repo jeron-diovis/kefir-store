@@ -140,7 +140,7 @@ export default function Form(
   const [ stateConfig, errorsConfig ] = F.zip(...config.filter(F.isNotEmptyList).map(parseConfigRow(state$)))
 
   const stateModel = Model(F.flatten(stateConfig), initialState)
-  pool$.plug(stateModel.stream$)
+  pool$.plug(stateModel.state$)
 
   // Note that errors aren't mapped from state, it's a completely separate stream.
   // Because incoming values are validated, not entire state.

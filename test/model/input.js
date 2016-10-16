@@ -8,7 +8,7 @@ describe("model :: input", () => {
     ])
 
     const spy = sinon.spy()
-    model.stream$.onValue(spy)
+    model.state$.onValue(spy)
 
     subject.handler("value")
 
@@ -23,7 +23,7 @@ describe("model :: input", () => {
     assert.isFunction(model.handlers.setValue, "Handler is not created")
 
     const spy = sinon.spy()
-    model.stream$.onValue(spy)
+    model.state$.onValue(spy)
 
     model.handlers.setValue("value")
 
@@ -48,7 +48,7 @@ describe("model :: input", () => {
       assert.isFunction(model.handlers.setValue, "Handler is not created")
 
       const spy = sinon.spy()
-      model.stream$.onValue(spy)
+      model.state$.onValue(spy)
 
       model.handlers.setValue("value")
 
@@ -63,7 +63,7 @@ describe("model :: input", () => {
       ])
 
       const spy = sinon.spy()
-      model.stream$.onValue(spy)
+      model.state$.onValue(spy)
 
       subject.handler("value_1")
       model.handlers.setValue("value_2")
@@ -79,7 +79,7 @@ describe("model :: input", () => {
       ])
 
       const spy = sinon.spy()
-      model.stream$.onValue(spy)
+      model.state$.onValue(spy)
 
       model.handlers.setValue(2)
 
