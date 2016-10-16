@@ -32,9 +32,9 @@ const createInputStream = state$ => ([ input$, reducer ]) => {
   `)
 }
 
-export default function Stream(config = [], initialState = getConfig().getDefaultState()) {
-  const pool = Kefir.pool()
-  const state$ = pool.toProperty(F.constant(initialState))
-  pool.plug(Kefir.merge(config.map(createInputStream(state$))))
+export default function Stream(config = [], initialState = getConfig().getEmptyObject()) {
+  const pool$ = Kefir.pool()
+  const state$ = pool$.toProperty(F.constant(initialState))
+  pool$.plug(Kefir.merge(config.filter(F.isNotEmptyList).map(createInputStream(state$))))
   return state$
 }
