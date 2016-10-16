@@ -88,7 +88,14 @@ const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
   // Intercept input stream and replace it with one filtered by validation results
   const parsedInput = InputAPI.parseInput(input)
   const input$ = InputAPI.getStreamFromParsedInput(parsedInput)
-  const error$ = S.withLatestFrom(input$, state$, validator)
+
+  const error$ = (
+    S.async(S.withLatestFrom(input$, state$, validator))
+      // If validator has thrown and it was not handled,
+      // pass exception text directly to form
+      .mapErrors(String).flatMapErrors(Kefir.constant)
+  )
+
   const value$ = Kefir.zip(
     [ input$, error$.map(CONFIG.isNotValidationError) ],
     (value, isValid) => ({ value, isValid })
@@ -108,13 +115,18 @@ const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
 
 // ---
 
-// TODO: support async validators (or allow validator as stream?)
+// TODO: Allow validator as a stream?
+
 // TODO: "validating" prop to indicate that async validation process is active
+// TODO: or map of validating states for each row?
+
 // TODO: accept external validation-trigger stream, or create own one by default
 // TODO: reserve "validate" handler name
+
 // TODO: allow to reset form: set initial state and empty errors
 // TODO: reserve "reset" handler name
-// TODO: add option "validateInitial: Bool"
+
+// TODO: add option "validateInitial: Bool" ?
 
 export default function Form(
   config = [],

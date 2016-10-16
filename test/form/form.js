@@ -43,16 +43,15 @@ describe("form :: base: ", () => {
     })
 
     it("should emit atomic updates", () => {
-      withFakeTime(tick => {
+      FakeAsync(tick => { // because stream-form emits asynchronously
         const subj = Subject()
         const form$ = Form.asStream([
           [ [ "setValue", subj ], "value", x => x > 0 ? null : "ERROR" ]
         ])
 
         const spy = sinon.spy()
-        const changes$ = form$.changes()
 
-        changes$.onValue(spy)
+        form$.changes().onValue(spy)
 
         subj.handler(0)
 

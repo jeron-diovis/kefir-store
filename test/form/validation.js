@@ -1,6 +1,6 @@
 import Form from "../../src/form"
 
-describe("form :: validation", () => {
+describe("form :: validation:", () => {
   let validator
   const ERROR_MSG = "ERROR"
 
@@ -123,6 +123,48 @@ describe("form :: validation", () => {
       form.state$.onValue(spy)
       assert.doesNotThrow(() => form.handlers.setValue(0))
       assert.isFalse(reducer.called)
+    })
+  })
+
+
+  describe("async validators:", () => {
+    it("should support promises", () => {
+      FakeAsync(tick => {
+        validator = sinon.stub().resolves("ERROR")
+
+        const form = Form([
+          [ "setValue", "value", validator ]
+        ])
+
+        const spy = sinon.spy()
+        const changes$ = form.validity$.changes()
+
+        changes$.onValue(spy)
+        form.handlers.setValue(0)
+
+        tick()
+
+        assert.deepEqual(spy.lastCall.args[0].errors, { value: "ERROR" })
+      })
+    })
+
+    it("should process uncaught promise errors", () => {
+      FakeAsync(tick => {
+        validator = sinon.stub().rejects(new Error("failed_promise"))
+
+        const form = Form([
+          ["setValue", "value", validator]
+        ])
+
+        const spy = sinon.spy()
+
+        form.validity$.changes().onValue(spy)
+        form.handlers.setValue(0)
+
+        tick()
+
+        assert.deepEqual(spy.lastCall.args[0].errors, { value: "Error: failed_promise" })
+      })
     })
   })
 })

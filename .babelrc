@@ -2,7 +2,6 @@
   "presets": ["stage-2", "es2015"],
   "plugins": [
     "add-module-exports",
-    "transform-runtime",
     "transform-decorators-legacy",
     "transform-class-properties"
   ]
