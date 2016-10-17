@@ -22,7 +22,7 @@ Subject.is = obj => (
 // ---
 
 const setFirst = fn => ([ first, ...rest ]) => [ fn(first), ...rest ]
-const setLast = fn => list => list.concat(fn(list.pop()))
+const setLast = fn => list => list.slice(0, -1).concat(fn(list[list.length - 1]))
 
 // ---
 
