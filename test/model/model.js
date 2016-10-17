@@ -1,7 +1,7 @@
 import Model from "../../src/model"
 
 describe("model :: base", () => {
-  it("should be an object { stream$, handlers }", () => {
+  it("should be an object { state$, handlers }", () => {
     const model = Model()
 
     assert.isObject(model)

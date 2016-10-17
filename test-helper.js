@@ -6,23 +6,23 @@ var Kefir = require("kefir")
 // ---
 
 var SinonAsPromised = require("sinon-as-promised")
-var MockPromise = require("mock-promises")
+var MockPromises = require("mock-promises")
 
 // @link https://github.com/charleshansen/mock-promises#promise-resolution-policy
 // Lib does not provide API for executing just ALL that can be executed.
 // I need a manual control over resolving/rejecting promises,
 // but don't need to exec callbacks manually one-by-one.
-MockPromise.getPendingPromisesCount = function() {
+MockPromises.getPendingPromisesCount = function() {
   return this.contracts.filter(x => !x._executed).length
 }
 
-MockPromise.run = function() {
+MockPromises.run = function() {
   let prev, curr
   do {
     prev = this.getPendingPromisesCount()
     this.contracts.executeForResolvedPromises()
     curr = this.getPendingPromisesCount()
-  } while (prev !== curr);
+  } while (prev !== curr)
 }
 
 // ---
@@ -44,16 +44,16 @@ global.Subject = function () {
 // After each timeshift, all promises, resolved for that moment, will be executed.
 global.FakeAsync = cb => {
   var clock = sinon.useFakeTimers()
-  global.Promise = MockPromise.getMockPromise(Promise)
+  global.Promise = MockPromises.getMockPromise(Promise)
   SinonAsPromised(global.Promise)
   try {
     cb(ms => {
       clock.tick(ms)
-      MockPromise.run()
+      MockPromises.run()
     })
   } finally {
-    MockPromise.reset()
-    global.Promise = MockPromise.getOriginalPromise()
+    MockPromises.reset()
+    global.Promise = MockPromises.getOriginalPromise()
     SinonAsPromised(global.Promise)
     clock.restore()
   }
