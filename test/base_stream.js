@@ -95,7 +95,16 @@ describe("basic stream", () => {
     const spy = sinon.spy()
     store.onValue(spy)
 
-    assert(spy.calledOnce)
-    assert.deepEqual(spy.getCall(0).args[0], { value: "initial value" })
+    assert.equal(spy.callCount, 1, "spy is not called once")
+    assert.deepEqual(spy.getCall(0).args[0], { value: "initial value" }, "initial state is invalid")
+  })
+
+  it("should allow initial state as a stream", () => {
+    const store = Stream([], Kefir.constant({ value: "initial value" }).flatten(x => [ x, { value: "second value" } ]))
+    const spy = sinon.spy()
+    store.onValue(spy)
+
+    assert.equal(spy.callCount, 1, "spy is not called once")
+    assert.deepEqual(spy.getCall(0).args[0], { value: "initial value" }, "initial state is invalid")
   })
 })
