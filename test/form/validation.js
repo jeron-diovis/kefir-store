@@ -167,4 +167,30 @@ describe("form :: validation:", () => {
       })
     })
   })
+
+  it("should support validator as stream", () => {
+    FakeAsync(tick => {
+      const subj = Subject();
+
+      const form$ = Form.asStream([
+        [ [ "setValue", subj ], "value",
+          Kefir.constant($ => $.map(([ value, state ]) => (
+            value === state.equalTo ? null : "ERROR"
+          )))
+        ]
+      ], {
+        value: 1,
+        equalTo: 2,
+      })
+
+      const spy = sinon.spy()
+
+      form$.changes().onValue(spy)
+      subj.handler(0)
+
+      tick()
+
+      assert.deepEqual(spy.lastCall.args[0].errors, { value: "ERROR" })
+    })
+  })
 })

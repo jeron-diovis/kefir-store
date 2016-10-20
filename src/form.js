@@ -11,6 +11,8 @@ const createValidatorOptionsFromProp = prop => ({
   key: prop,
 })
 
+const transformWith = ($, fn) => fn($)
+
 // ---
 
 const parseValidator = (reducer, validator) => {
@@ -40,9 +42,9 @@ const parseValidator = (reducer, validator) => {
     }
   }
 
-  if (typeof validator !== "function") {
+  if (!(typeof validator === "function" || F.isStream(validator))) {
     throw new Error(`[kefir-store :: form] Validation config.
-      Validator must be a function.
+      Validator must be a function or an Observable.
       Current: ${JSON.stringify(validator)}
     `)
   }
@@ -90,16 +92,24 @@ const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
   const input$ = InputAPI.getStreamFromParsedInput(parsedInput)
 
   const error$ = (
-    S.async(S.withLatestFrom(input$, state$, validator))
-      // If validator has thrown and it was not handled,
-      // pass exception text directly to form
-      .mapErrors(String).flatMapErrors(Kefir.constant)
+    S.async(
+      !F.isStream(validator)
+        ? S.withLatestFrom(input$, state$, validator)
+        : S.withLatestFrom(
+            Kefir.constant(S.withLatestFrom(input$, state$)),
+            validator,
+            transformWith
+          ).flatMap()
+    )
+    // If validator has thrown and it was not handled,
+    // pass exception text directly to form
+    .mapErrors(String).flatMapErrors(Kefir.constant)
   )
 
   const value$ = Kefir.zip(
     [ input$, error$.map(CONFIG.isNotValidationError) ],
     (value, isValid) => ({ value, isValid })
-  )
+  ).toProperty()
 
   return [
     [
@@ -115,7 +125,7 @@ const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
 
 // ---
 
-// TODO: Allow validator as a stream?
+// TODO: For delayed validation, only take the last validation result, skip all not completed results
 
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?
@@ -151,7 +161,7 @@ export default function Form(
   const validity$ = errors$.slidingWindow(2).map(([ prev, errors ]) => ({
     errors: errors || prev,
     isValid: !errors ? undefined : CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError),
-  }))
+  })).toProperty()
 
   return {
     handlers: stateModel.handlers,
@@ -179,5 +189,5 @@ Form.asStream = (...args) => {
   ]).combine(
     Kefir.constant(handlers),
     ([ state, validity ], handlers) => Object.assign({ state, handlers }, validity)
-  )
+  ).toProperty()
 }

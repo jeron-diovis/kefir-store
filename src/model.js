@@ -125,5 +125,5 @@ export default function Model(cfg = [], ...args) {
 
 Model.asStream = (...args) => {
   const { state$, handlers } = Model(...args)
-  return state$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign)
+  return state$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign).toProperty()
 }
