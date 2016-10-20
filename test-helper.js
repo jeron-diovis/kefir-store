@@ -31,10 +31,10 @@ global.assert = chai.assert
 global.sinon = sinon
 global.Kefir = Kefir
 
-global.Subject = function () {
+global.Subject = function (init = x => x) {
   var bus = Bus()
   return {
-    stream: bus.changes(),
+    stream: init(bus.changes()),
     handler: bus.emit,
   }
 }
