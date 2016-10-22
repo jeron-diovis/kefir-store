@@ -43,26 +43,22 @@ describe("form :: base: ", () => {
     })
 
     it("should emit atomic updates", () => {
-      FakeAsync(tick => { // because stream-form emits asynchronously
-        const subj = Subject()
-        const form$ = Form.asStream([
-          [ [ "setValue", subj ], "value", x => x > 0 ? null : "ERROR" ]
-        ])
+      const subj = Subject()
+      const form$ = Form.asStream([
+        [ [ "setValue", subj ], "value", x => x > 0 ? null : "ERROR" ]
+      ])
 
-        const spy = sinon.spy()
+      const spy = sinon.spy()
 
-        form$.changes().onValue(spy)
+      form$.changes().onValue(spy)
 
-        subj.handler(0)
+      subj.handler(0)
 
-        tick()
-
-        assert.equal(spy.callCount, 1)
-        const result = spy.lastCall.args[0]
-        assert.deepEqual(result.state, { value: 0 })
-        assert.deepEqual(result.errors, { value: "ERROR" })
-        assert.deepEqual(result.isValid, false)
-      })
+      assert.equal(spy.callCount, 1)
+      const result = spy.lastCall.args[0]
+      assert.deepEqual(result.state, { value: 0 })
+      assert.deepEqual(result.errors, { value: "ERROR" })
+      assert.deepEqual(result.isValid, false)
     })
   })
 })

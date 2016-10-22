@@ -41,6 +41,33 @@ describe("form :: validator config: ", () => {
   })
 
 
+  it("should also support validator as stream", () => {
+    FakeAsync(tick => {
+      const subj = Subject();
+
+      const form$ = Form.asStream([
+        [ [ "setValue", subj ], "value",
+          Kefir.constant($ => $.delay().map(([ value, state ]) => (
+            value === state.equalTo ? null : "ERROR"
+          )))
+        ]
+      ], {
+        value: 1,
+        equalTo: 2,
+      })
+
+      const spy = sinon.spy()
+
+      form$.changes().onValue(spy)
+      subj.handler(0)
+
+      tick()
+
+      assert.equal(spy.callCount, 1, "Validator is not called")
+      assert.deepEqual(spy.lastCall.args[0].errors, { value: "ERROR" })
+    })
+  })
+
 
   describe("options: ", () => {
     let validator
