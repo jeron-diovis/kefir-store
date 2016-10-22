@@ -72,12 +72,13 @@ const parseValidator = (reducer, validator) => {
 // ---
 
 const getValueProp = F.prop("value")
-const getIsValidProp = F.prop("isError")
-getIsValidProp.negate = x => !getIsValidProp(x)
-const validatedValueStream = (valid, $) => $.filter(valid ? getIsValidProp : getIsValidProp.negate).map(getValueProp)
+const getErrorProp = F.prop("error")
+
+const isValidInput = x => getConfig().isNotValidationError(getErrorProp(x))
+isValidInput.not = x => !isValidInput(x)
+const validatedValue = (valid, $) => $.filter(valid ? isValidInput : isValidInput.not).map(getValueProp)
 
 const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
-  const CONFIG = getConfig()
   const [ validator, validatorOptions ] = parseValidator(reducer, _validator)
 
   // nothing to do here, it's just a regular model field
@@ -88,44 +89,50 @@ const parseConfigRow = state$ => ([ input, reducer, _validator ]) => {
   }
 
   // Intercept input stream and replace it with one filtered by validation results
+
   const parsedInput = InputAPI.parseInput(input)
   const input$ = InputAPI.getStreamFromParsedInput(parsedInput)
 
-  const error$ = (
-    S.async(
-      !F.isStream(validator)
-        ? S.withLatestFrom(input$, state$, validator)
-        : S.withLatestFrom(
-            Kefir.constant(S.withLatestFrom(input$, state$)),
-            validator,
-            transformWith
-          ).flatMap()
-    )
-    // If validator has thrown and it was not handled,
-    // pass exception text directly to form
-    .mapErrors(String).flatMapErrors(Kefir.constant)
-  )
+  // Each input value is validated.
+  // Each value should be emitted synchronously with validation result for it.
+  // But validator can ve async.
+  // And if new value arrives before validation for previous one is completed,
+  // then we are no more interested in both prev value and it's validation result.
+  const validatedInput$ = (
+    input$.map(Kefir.constant)
+      .map(input$ => {
+        const error$ = (
+          S.async(
+            !F.isStream(validator)
+              ? S.withLatestFrom(input$, state$, validator)
+              : S.withLatestFrom(
+                  Kefir.constant(S.withLatestFrom(input$, state$)),
+                  validator,
+                  transformWith
+                ).flatMap()
+          )
+          // If validator has thrown and it was not handled, pass exception text directly to form
+          .mapErrors(String).flatMapErrors(Kefir.constant)
+        )
 
-  const value$ = Kefir.zip(
-    [ input$, error$.map(CONFIG.isNotValidationError) ],
-    (value, isValid) => ({ value, isValid })
-  ).toProperty()
+        return Kefir.zip([ input$, error$ ], (value, error) => ({ value, error })).toProperty()
+      })
+      .flatMapLatest().toProperty()
+  )
 
   return [
     [
-      [ InputAPI.replaceStreamInParsedInput(parsedInput, validatedValueStream(true, value$)), reducer ],
+      [ InputAPI.replaceStreamInParsedInput(parsedInput, validatedValue(true, validatedInput$)), reducer ],
       // If value is invalid, reducer for it should not be executed (cause it can lead to errors),
       // but in general value still should be somehow saved in state
       // (important for React's controlled inputs, for example)
-      [ validatedValueStream(false, value$), validatorOptions.set ],
+      [ validatedValue(false, validatedInput$), validatorOptions.set ],
     ],
-    [ error$.skipDuplicates(F.equals), CONFIG.defaultSetter(validatorOptions.key) ],
+    [ validatedInput$.map(getErrorProp).skipDuplicates(F.equals), getConfig().defaultSetter(validatorOptions.key) ],
   ]
 }
 
 // ---
-
-// TODO: For delayed validation, only take the last validation result, skip all not completed results
 
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?

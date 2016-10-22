@@ -166,6 +166,32 @@ describe("form :: validation:", () => {
         assert.deepEqual(spy.lastCall.args[0].errors, { value: "Error: failed_promise" })
       })
     })
+
+    it("should skip previous validation if it isn't completed before next input arrives", () => {
+      FakeAsync(tick => {
+        validator = x => new Promise(res => {
+          setTimeout(res, 150, x % 2 === 0 ? null : `${x} is invalid`)
+        })
+
+        const input$ = Kefir.sequentially(100, [ 1, 2, 3 ])
+
+        const form = Form([
+          [ input$, "value", validator ]
+        ])
+
+        const spy = sinon.spy()
+
+        form.validity$.changes().onValue(spy)
+
+        tick(100)
+        tick(100)
+        tick(100)
+        tick(150)
+
+        assert.equal(spy.callCount, 1, "Validator is called multiple times")
+        assert.deepEqual(spy.lastCall.args[0].errors, { value: "3 is invalid" })
+      })
+    })
   })
 
   it("should support validator as stream", () => {
@@ -174,7 +200,7 @@ describe("form :: validation:", () => {
 
       const form$ = Form.asStream([
         [ [ "setValue", subj ], "value",
-          Kefir.constant($ => $.map(([ value, state ]) => (
+          Kefir.constant($ => $.delay().map(([ value, state ]) => (
             value === state.equalTo ? null : "ERROR"
           )))
         ]
@@ -190,6 +216,7 @@ describe("form :: validation:", () => {
 
       tick()
 
+      assert.equal(spy.callCount, 1, "Validator is not called")
       assert.deepEqual(spy.lastCall.args[0].errors, { value: "ERROR" })
     })
   })
