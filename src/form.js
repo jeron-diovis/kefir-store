@@ -43,7 +43,7 @@ const parseValidator = (reducer, validator) => {
     }
   }
 
-  if (!(typeof validator === "function" || F.isStream(validator))) {
+  if (!(typeof validator === "function" || S.isStream(validator))) {
     throw new Error(`[kefir-store :: form] Validation config.
       Validator must be a function or an Observable.
       Current: ${JSON.stringify(validator)}
@@ -81,7 +81,7 @@ const validatedValue = (valid, $) => $.filter(valid ? isValidInput : isValidInpu
 
 const createErrorStream = (input$, state$, validator) => (
   S.async(
-    !F.isStream(validator)
+    !S.isStream(validator)
       ? S.withLatestFrom(input$, state$, validator)
       : S.withLatestFrom(
         Kefir.constant(S.withLatestFrom(input$, state$)),
@@ -168,10 +168,10 @@ const createValidationRow = (validate$, config) => {
 
 // ---
 
-// TODO: Form does not support initial value as stream. Create a reusable helper for this
-
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?
+
+// TODO: "isValidated" prop to indicate whether current update is caused by calling "validate" handler
 
 // TODO: allow to reset form: set initial state and empty errors
 // TODO: reserve "reset" handler name
@@ -189,7 +189,7 @@ function _Form(
   const CONFIG = getConfig()
 
   const pool$ = Kefir.pool()
-  const state$ = pool$.toProperty(F.constant(initialState))
+  const state$ = S.provideInitialState(pool$, initialState)
 
   const $validate = Subject()
 

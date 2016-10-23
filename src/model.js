@@ -2,6 +2,7 @@ import Kefir from "kefir"
 import Stream from "./stream"
 import Subject from "./lib/Subject"
 import * as F from "./lib/func_utils"
+import * as S from "./lib/stream_utils"
 
 // ---
 
@@ -15,7 +16,7 @@ const parseCompositeInput = setLast(arg => {
     return arg
   }
 
-  if (F.isStream(arg)) {
+  if (S.isStream(arg)) {
     return Subject($ => $.merge(arg))
   }
 
@@ -32,7 +33,7 @@ const parseCompositeInput = setLast(arg => {
 
 export const parseInput = arg => {
   // standard format
-  if (F.isStream(arg)) {
+  if (S.isStream(arg)) {
     return arg
   }
 
@@ -64,7 +65,7 @@ export const parseInput = arg => {
 // ---
 
 export const getStreamFromParsedInput = input => {
-  if (F.isStream(input)) {
+  if (S.isStream(input)) {
     return input
   }
 
@@ -72,7 +73,7 @@ export const getStreamFromParsedInput = input => {
 }
 
 export const replaceStreamInParsedInput = (input, replace) => {
-  if (F.isStream(input)) {
+  if (S.isStream(input)) {
     return replace
   }
 
@@ -87,7 +88,7 @@ export default function Model(cfg = [], ...args) {
   const handlers = {}
 
   const config = cfg.filter(F.isNotEmptyList).map(setFirst(parseInput)).map(([ parsed, ...rest ]) => {
-    if (F.isStream(parsed)) {
+    if (S.isStream(parsed)) {
       return [ parsed, ...rest ]
     }
 

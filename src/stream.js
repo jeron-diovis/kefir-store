@@ -6,7 +6,7 @@ import { getConfig } from "./config"
 const transformWith = ($, fn) => fn($)
 
 const createInputStream = state$ => ([ input$, reducer ]) => {
-  if (!F.isStream(input$)) {
+  if (!S.isStream(input$)) {
     throw new Error("[kefir-store] Input must be an Observable")
   }
 
@@ -18,7 +18,7 @@ const createInputStream = state$ => ([ input$, reducer ]) => {
     return state$.sampledBy(input$, reducer)
   }
 
-  if (F.isStream(reducer)) {
+  if (S.isStream(reducer)) {
     return S.withLatestFrom(
       Kefir.constant(state$.sampledBy(input$, Array.of)),
       reducer,
@@ -34,9 +34,7 @@ const createInputStream = state$ => ([ input$, reducer ]) => {
 
 export default function Stream(config = [], initialState = getConfig().getEmptyObject()) {
   const pool$ = Kefir.pool()
-  const state$ = !F.isStream(initialState)
-    ? pool$.toProperty(F.constant(initialState))
-    : pool$.merge(initialState.take(1)).toProperty()
+  const state$ = S.provideInitialState(pool$, initialState)
   pool$.plug(Kefir.merge(config.filter(F.isNotEmptyList).map(createInputStream(state$))))
   return state$
 }

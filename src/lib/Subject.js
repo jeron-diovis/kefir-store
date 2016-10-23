@@ -1,4 +1,5 @@
 import * as F from "./func_utils"
+import * as S from "./stream_utils"
 import Bus from "kefir-bus"
 
 const Subject = (init = F.id) => {
@@ -11,7 +12,7 @@ const Subject = (init = F.id) => {
 
 Subject.is = obj => (
   F.isPlainObject(obj)
-  && F.isStream(obj.stream)
+  && S.isStream(obj.stream)
   && typeof obj.handler === "function"
 )
 
