@@ -75,7 +75,7 @@ describe("form :: validator config: ", () => {
     const defaultOptions = {
       get: () => {},
       set: () => {},
-      key: "",
+      key: "value",
     };
     const cfg = arg => ({ ...defaultOptions, ...arg })
 
@@ -121,6 +121,30 @@ describe("form :: validator config: ", () => {
       assert.deepEqual(spy.lastCall.args[0], { value: -2 })
     })
 
-    // TODO: 'get'
+
+    it("'get': should describe how to get current field value from state when entire form is validated", () => {
+      const form = Form([
+        [
+          [ "setValue", $ => $.diff(null, 0) ],
+          (state, [ prev_value, value ]) => ({ ...state, value, prev_value }),
+          [ validator, cfg({
+            get: state => state.prev_value,
+          }) ]
+        ]
+      ], {
+        value: 1,
+        prev_value: 0,
+      })
+
+      const spy = sinon.spy()
+      form.validity$.changes().onValue(spy)
+
+      form.handlers.validate()
+
+      const result = spy.lastCall.args[0]
+      assert.deepEqual(result.errors, {
+        value: ERROR_MSG,
+      })
+    })
   })
 })

@@ -5,9 +5,18 @@ describe("form :: base: ", () => {
     const form = Form()
 
     assert.isObject(form)
-    assert.instanceOf(form.state$, Kefir.Observable)
-    assert.instanceOf(form.validity$, Kefir.Observable)
-    assert.deepEqual(form.handlers, {})
+    assert.instanceOf(form.state$, Kefir.Observable, "Form does not 'state$' stream")
+    assert.instanceOf(form.validity$, Kefir.Observable, "Form does not have 'validity$' stream")
+    assert.isObject(form.handlers, "Form does not have handlers")
+    assert.isFunction(form.handlers.validate, "form.handlers.validate is not a function")
+  })
+
+  it("should not allow handler with name 'validate'", () => {
+    const setup = () => Form([
+      [ "validate", "some" ]
+    ])
+
+    assert.throws(setup, /Handler name 'validate' is reserved/)
   })
 
   it("should be initially valid", () => {
@@ -34,12 +43,13 @@ describe("form :: base: ", () => {
 
       const spy = sinon.spy()
       form$.onValue(spy)
-      assert.deepEqual(spy.lastCall.args[0], {
-        state: {},
-        errors: {},
-        handlers: {},
-        isValid: undefined,
-      })
+
+      const state = spy.lastCall.args[0]
+      assert.deepEqual(state.state, {})
+      assert.deepEqual(state.errors, {})
+      assert.isUndefined(state.isValid)
+      assert.isObject(state.handlers)
+      assert.isFunction(state.handlers.validate)
     })
 
     it("should emit atomic updates", () => {

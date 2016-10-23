@@ -1,23 +1,7 @@
 import Kefir from "kefir"
 import Stream from "./stream"
-import Bus from "kefir-bus"
+import Subject from "./lib/Subject"
 import * as F from "./lib/func_utils"
-
-// ---
-
-const Subject = (init = F.id) => {
-  const bus = Bus()
-  return {
-    stream: init(bus.changes()), // use .changes to create new observable, without emit/plug/etc methods
-    handler: bus.emit,
-  }
-}
-
-Subject.is = obj => (
-  F.isPlainObject(obj)
-  && F.isStream(obj.stream)
-  && typeof obj.handler === "function"
-)
 
 // ---
 

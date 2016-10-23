@@ -7,6 +7,7 @@ export { default as prop } from "lodash/property"
 export { default as zip } from "lodash/zip"
 export { default as equals } from "lodash/isEqual"
 export { default as flatten } from "lodash/flatten"
+export { default as flow } from "lodash/flow"
 
 export const isStream = x => x instanceof Kefir.Observable
 export const isNotEmptyList = x => x.length > 0
