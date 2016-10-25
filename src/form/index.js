@@ -14,8 +14,6 @@ import createValidationRow from "./createValidationRow"
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?
 
-// TODO: "isValidated" prop to indicate whether current update is caused by calling "validate" handler
-
 // TODO: allow to reset form: set initial state and empty errors
 // TODO: reserve "reset" handler name
 
@@ -61,18 +59,26 @@ function _Form(
     CONFIG.getEmptyObject()
   )
 
+  const isValidated$ = $validate.stream
+    // activate manually, so in this stream values appears BEFORE errors$ stream, sampled by validate$.
+    .changes().onValue(() => {})
+    // Whenever errors$ updated, check whether there is a preceding validation event.
+    // If it is, it means that entire form was validated..
+    .bufferBy(errors$).map(F.isNotEmptyList)
+    .toProperty(F.constant(false))
+
   // "isValid" initially should be undefined.
   // Until some input arrives, form is neither valid nor invalid – it's not validated at all.
   const validity$ = errors$.slidingWindow(2).map(([ prev, errors ]) => ({
     errors: errors || prev,
     isValid: !errors ? undefined : CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError),
-  })).toProperty()
+  }))
 
   return {
     handlers: stateModel.handlers,
     state$,
-    validity$,
-    validate$: $validate.stream,
+    validity$: S.withLatestFrom(validity$, isValidated$, CONFIG.defaultSetter("isValidated")).toProperty(),
+    validate$: $validate.stream.changes(),
   }
 }
 
@@ -84,7 +90,6 @@ export default function Form(...args) {
 
 Form.asStream = (...args) => {
   const { state$, validity$, validate$, handlers } = _Form(...args)
-  const ret = {}
 
   // As developer has no access to error streams and can't modify them in some crazy way,
   // we can be sure that for each incoming value error will be updated synchronously.
@@ -97,6 +102,6 @@ Form.asStream = (...args) => {
     validity$,
   ]).combine(
     Kefir.constant(handlers),
-    ([ state, validity ], handlers) => Object.assign(ret, { state, handlers }, validity)
+    ([ state, validity ], handlers) => Object.assign({}, { state, handlers }, validity)
   ).toProperty()
 }

@@ -49,13 +49,19 @@ describe("form :: validation:", () => {
       ])
 
       const spy = sinon.spy()
-      form.validity$.onValue(spy)
+      form.validity$.changes().onValue(spy)
       form.handlers.setValue(5)
       form.handlers.setValue(1)
 
-      assert.equal(spy.callCount, 3)
-      assert.deepEqual(spy.getCall(1).args[0], ({ errors: { value: ERROR_MSG }, isValid: false }))
-      assert.deepEqual(spy.getCall(2).args[0], ({ errors: { value: null }, isValid: true }))
+      assert.equal(spy.callCount, 2)
+
+      const args = x => spy.getCall(x).args[0]
+
+      assert.deepEqual(args(0).errors, { value: ERROR_MSG })
+      assert.equal(args(0).isValid, false)
+
+      assert.deepEqual(args(1).errors, { value: null })
+      assert.equal(args(1).isValid, true)
     })
 
     it("should emit only when it changes", () => {

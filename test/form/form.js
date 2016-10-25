@@ -30,7 +30,8 @@ describe("form :: base: ", () => {
     assert.equal(spyState.callCount, 1, "Initial state emits more that once")
     assert.equal(spyValidity.callCount, 1, "Initial validity emits more that once")
     assert.deepEqual(spyState.getCall(0).args[0], {}, "Initial state is not empty")
-    assert.deepEqual(spyValidity.getCall(0).args[0], { errors: {}, isValid: undefined }, "Initial validation state is not default")
+    assert.deepEqual(spyValidity.getCall(0).args[0].errors, {})
+    assert.equal(spyValidity.getCall(0).args[0].isValid, undefined)
   })
 
 
