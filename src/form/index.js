@@ -63,7 +63,7 @@ function _Form(
     // activate manually, so in this stream values appears BEFORE errors$ stream, sampled by validate$.
     .changes().onValue(() => {})
     // Whenever errors$ updated, check whether there is a preceding validation event.
-    // If it is, it means that entire form was validated..
+    // If it is, it means that entire form was validated.
     .bufferBy(errors$).map(F.isNotEmptyList)
     .toProperty(F.constant(false))
 
