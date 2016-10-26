@@ -8,23 +8,6 @@ var Kefir = require("kefir")
 var SinonAsPromised = require("sinon-as-promised")
 var MockPromises = require("mock-promises")
 
-// @link https://github.com/charleshansen/mock-promises#promise-resolution-policy
-// Lib does not provide API for executing just ALL that can be executed.
-// I need a manual control over resolving/rejecting promises,
-// but don't need to exec callbacks manually one-by-one.
-MockPromises.getPendingPromisesCount = function() {
-  return this.contracts.filter(x => !x._executed).length
-}
-
-MockPromises.run = function() {
-  let prev, curr
-  do {
-    prev = this.getPendingPromisesCount()
-    this.contracts.executeForResolvedPromises()
-    curr = this.getPendingPromisesCount()
-  } while (prev !== curr)
-}
-
 // ---
 
 global.assert = chai.assert
@@ -49,7 +32,7 @@ global.FakeAsync = cb => {
   try {
     cb(ms => {
       clock.tick(ms)
-      MockPromises.run()
+      MockPromises.tickAllTheWay()
     })
   } finally {
     MockPromises.reset()
