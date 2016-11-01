@@ -43,23 +43,31 @@ describe("form :: base: ", () => {
     assert.equal(spyValidity.getCall(0).args[0].isValid, undefined)
   })
 
+  // ---
+
+  const testFormStream = form$ => {
+    assert.instanceOf(form$, Kefir.Observable, "Form is not an Observable")
+
+    const spy = sinon.spy()
+    form$.onValue(spy)
+
+    const state = spy.lastCall.args[0]
+    assert.deepEqual(state.state, { value: "initial value" })
+    assert.deepEqual(state.errors, {})
+    assert.isUndefined(state.isValid)
+    assert.isObject(state.handlers)
+    assert.isFunction(state.handlers.validate)
+  }
+
 
   describe("asStream:", () => {
     it("should be an Observable<{ state, handlers, errors, isValid }>", () => {
       assert.isFunction(Form.asStream)
 
-      const form$ = Form.asStream()
-      assert.instanceOf(form$, Kefir.Observable, "Form is not an Observable")
-
-      const spy = sinon.spy()
-      form$.onValue(spy)
-
-      const state = spy.lastCall.args[0]
-      assert.deepEqual(state.state, {})
-      assert.deepEqual(state.errors, {})
-      assert.isUndefined(state.isValid)
-      assert.isObject(state.handlers)
-      assert.isFunction(state.handlers.validate)
+      testFormStream(Form.asStream(
+        [ [ "setValue", "value" ] ],
+        { value: "initial value" }
+      ))
     })
 
     it("should emit atomic updates", () => {
@@ -81,6 +89,23 @@ describe("form :: base: ", () => {
       assert.deepEqual(result.isValid, false)
     })
   })
+
+
+  describe("toStream", () => {
+    it("should convert form object into Observable", () => {
+      assert.isFunction(Form.toStream)
+
+      const form = Form.toStream(Form(
+        [ [ "setValue", "value" ] ],
+        { value: "initial value" }
+      ))
+
+      testFormStream(form)
+    })
+  })
+
+
+  // ---
 
 
   describe("reset:", () => {

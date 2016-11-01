@@ -20,7 +20,7 @@ import createValidationRow from "./createValidationRow"
 
 // TODO: helper for creating stream, validated in response on external event
 
-function _Form(
+export default function Form(
   config = [],
   initialState = getConfig().getEmptyObject()
 ) {
@@ -96,14 +96,14 @@ function _Form(
   }
 }
 
-export default function Form(...args) {
-  const form = _Form(...args)
-  delete form.validate$
-  return form
-}
+// ---
 
-Form.asStream = (...args) => {
-  const { state$, validity$, validate$, handlers } = _Form(...args)
+Form.toStream = form => {
+  if (S.isStream(form)) {
+    return form;
+  }
+
+  const { state$, validity$, validate$, handlers } = form
 
   // As developer has no access to error streams and can't modify them in some crazy way,
   // we can be sure that for each incoming value error will be updated synchronously.
@@ -119,3 +119,5 @@ Form.asStream = (...args) => {
     ([ state, validity ], handlers) => Object.assign({}, { state, handlers }, validity)
   ).toProperty()
 }
+
+Form.asStream = (...args) => Form.toStream(Form(...args))
