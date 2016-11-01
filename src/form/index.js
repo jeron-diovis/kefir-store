@@ -14,9 +14,6 @@ import createValidationRow from "./createValidationRow"
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?
 
-// TODO: allow to reset form: set initial state and empty errors
-// TODO: reserve "reset" handler name
-
 // TODO: add option "validateInitial: Bool" ?
 
 // TODO: helper for combining multiple forms
@@ -33,6 +30,7 @@ function _Form(
   const state$ = S.withInitialState(pool$, initialState)
 
   const $validate = Subject()
+  const $reset = Subject()
 
   const [
     stateConfig = [],
@@ -40,7 +38,15 @@ function _Form(
     validatedConfig = []
   ] = F.zip(...config.filter(F.isNotEmptyList).map(parseRow(state$, $validate.stream)))
 
-  const stateModel = Model(F.flatten(stateConfig), initialState)
+  const stateModel = Model(
+    F.flatten(stateConfig).concat([
+      [
+        S.withInitialState(Kefir.never(), initialState).sampledBy($reset.stream),
+        (currentState, initialState) => initialState,
+      ]
+    ]),
+    initialState
+  )
   pool$.plug(stateModel.state$)
 
   // ---
@@ -48,14 +54,21 @@ function _Form(
   if ("validate" in stateModel.handlers) {
     throw new Error("[kefir-store :: form] Handler name 'validate' is reserved")
   }
+  if ("reset" in stateModel.handlers) {
+    throw new Error("[kefir-store :: form] Handler name 'reset' is reserved")
+  }
   stateModel.handlers.validate = $validate.handler
+  stateModel.handlers.reset = $reset.handler
 
   // ---
 
   // Note that errors aren't mapped from state, it's a completely separate stream.
   // Because incoming values are validated, not entire state.
   const errors$ = Stream(
-    errorsConfig.concat([ createValidationRow($validate.stream, validatedConfig) ]),
+    errorsConfig.concat([
+      createValidationRow($validate.stream, validatedConfig),
+      [ $reset.stream, () => CONFIG.getEmptyObject() ]
+    ]),
     CONFIG.getEmptyObject()
   )
 
@@ -69,9 +82,9 @@ function _Form(
 
   // "isValid" initially should be undefined.
   // Until some input arrives, form is neither valid nor invalid – it's not validated at all.
-  const validity$ = errors$.slidingWindow(2).map(([ prev, errors ]) => ({
-    errors: errors || prev,
-    isValid: !errors ? undefined : CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError),
+  const validity$ = errors$.map(errors => ({
+    errors,
+    isValid: CONFIG.isEmptyObject(errors) ? undefined : CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError),
   }))
 
   return {

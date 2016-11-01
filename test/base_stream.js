@@ -91,12 +91,23 @@ describe("basic stream", () => {
   })
 
   it("should accept initial state as second param", () => {
-    const store = Stream([], { value: "initial value" })
+    const initialState = { value: "initial value" }
+    const subj = Subject()
+    const store = Stream(
+      [
+        [ subj.stream, "value" ]
+      ],
+      initialState
+    )
+
     const spy = sinon.spy()
     store.onValue(spy)
 
-    assert.equal(spy.callCount, 1, "spy is not called once")
+    subj.handler("new value")
+
+    assert.equal(spy.callCount, 2, "spy is not called once")
     assert.deepEqual(spy.getCall(0).args[0], { value: "initial value" }, "initial state is invalid")
+    assert.deepEqual(initialState, { value: "initial value" }, "initial state is mutated!")
   })
 
   it("should allow initial state as a stream", () => {

@@ -9,6 +9,7 @@ describe("form :: base: ", () => {
     assert.instanceOf(form.validity$, Kefir.Observable, "Form does not have 'validity$' stream")
     assert.isObject(form.handlers, "Form does not have handlers")
     assert.isFunction(form.handlers.validate, "form.handlers.validate is not a function")
+    assert.isFunction(form.handlers.reset, "form.handlers.reset is not a function")
   })
 
   it("should not allow handler with name 'validate'", () => {
@@ -17,6 +18,14 @@ describe("form :: base: ", () => {
     ])
 
     assert.throws(setup, /Handler name 'validate' is reserved/)
+  })
+
+  it("should not allow handler with name 'reset'", () => {
+    const setup = () => Form([
+      [ "reset", "some" ]
+    ])
+
+    assert.throws(setup, /Handler name 'reset' is reserved/)
   })
 
   it("should be initially valid", () => {
@@ -70,6 +79,33 @@ describe("form :: base: ", () => {
       assert.deepEqual(result.state, { value: 0 })
       assert.deepEqual(result.errors, { value: "ERROR" })
       assert.deepEqual(result.isValid, false)
+    })
+  })
+
+
+  describe("reset:", () => {
+    it("should return state, errors and validity to initial state", () => {
+      const form = Form([
+        [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
+      ]);
+
+      const spyState = sinon.spy();
+      const spyValidity = sinon.spy();
+      form.state$.changes().onValue(spyState);
+      form.validity$.changes().onValue(spyValidity);
+
+      form.handlers.setValue(0);
+      form.handlers.reset();
+
+      assert.equal(spyState.callCount, 2);
+      assert.equal(spyValidity.callCount, 2);
+
+      assert.deepEqual(spyState.lastCall.args[0], {});
+      assert.deepEqual(spyValidity.lastCall.args[0], {
+        errors: {},
+        isValid: undefined,
+        isValidated: false,
+      });
     })
   })
 })
