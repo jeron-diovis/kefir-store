@@ -27,7 +27,7 @@ function _Form(
   const CONFIG = getConfig()
 
   const pool$ = Kefir.pool()
-  const state$ = S.withInitialState(pool$, initialState)
+  const state$ = pool$.toProperty()
 
   const $validate = Subject()
   const $reset = Subject()
@@ -51,6 +51,7 @@ function _Form(
 
   // ---
 
+  // reserved handlers
   if ("validate" in stateModel.handlers) {
     throw new Error("[kefir-store :: form] Handler name 'validate' is reserved")
   }

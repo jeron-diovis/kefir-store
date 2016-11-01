@@ -47,6 +47,7 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
   const CONFIG = getConfig()
 
   return [
+    // state updates:
     [
       [
         InputAPI.replaceStreamInParsedInput(parsedInput, validatedValue(true, validatedInput$)),
@@ -61,11 +62,13 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
       ],
     ],
 
+    // validation of particular input when it changes:
     [
       validatedInput$.map(getErrorProp).skipDuplicates(F.equals),
       CONFIG.defaultSetter(validatorOptions.key),
     ],
 
+    // validation of particular input when entire current state validated:
     [
       createErrorStream(state$.sampledBy(validate$).map(validatorOptions.get), state$, validator).toProperty()
         // Must activate manually, so it's ready to react to values from validate$ stream.

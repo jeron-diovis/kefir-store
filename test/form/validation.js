@@ -24,7 +24,7 @@ describe("form :: validation:", () => {
     form.handlers.setValue(1)
 
     assert.equal(validator.callCount, 1, "Validator is not called")
-    assert(validator.calledWithMatch(1, { value: 0 }), "validator does not receive proper arguments")
+    assert.deepEqual(validator.lastCall.args, [ 1, { value: 0 } ], "validator does not receive proper arguments")
   })
 
 
@@ -175,11 +175,14 @@ describe("form :: validation:", () => {
 
     it("should skip previous validation if it isn't completed before next input arrives", () => {
       FakeAsync(tick => {
+        const INPUT_TIMEOUT = 100
+        const VALIDATOR_TIMEOUT = 150
+
         validator = x => new Promise(res => {
-          setTimeout(res, 150, x % 2 === 0 ? null : `${x} is invalid`)
+          setTimeout(res, VALIDATOR_TIMEOUT, x % 2 === 0 ? null : `${x} is invalid`)
         })
 
-        const input$ = Kefir.sequentially(100, [ 1, 2, 3 ])
+        const input$ = Kefir.sequentially(INPUT_TIMEOUT, [ 1, 2, 3 ])
 
         const form = Form([
           [ input$, "value", validator ]
@@ -189,10 +192,10 @@ describe("form :: validation:", () => {
 
         form.validity$.changes().onValue(spy)
 
-        tick(100)
-        tick(100)
-        tick(100)
-        tick(150)
+        tick(INPUT_TIMEOUT)
+        tick(INPUT_TIMEOUT)
+        tick(INPUT_TIMEOUT)
+        tick(VALIDATOR_TIMEOUT)
 
         assert.equal(spy.callCount, 1, "Validator is called multiple times")
         assert.deepEqual(spy.lastCall.args[0].errors, { value: "3 is invalid" })
