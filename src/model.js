@@ -110,7 +110,7 @@ export default function Model(cfg = [], ...args) {
 
 Model.toStream = model => {
   if (S.isStream(model)) {
-    return model;
+    return model
   }
 
   const { state$, handlers } = model

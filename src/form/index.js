@@ -100,7 +100,7 @@ export default function Form(
 
 Form.toStream = form => {
   if (S.isStream(form)) {
-    return form;
+    return form
   }
 
   const { state$, validity$, validate$, handlers } = form
