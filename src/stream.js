@@ -30,5 +30,5 @@ export default function Stream(config = [], initialState = getConfig().getEmptyO
   const pool$ = Kefir.pool()
   const state$ = S.withInitialState(pool$, initialState)
   pool$.plug(Kefir.merge(config.filter(F.isNotEmptyList).map(createInputStream(state$))))
-  return state$
+  return state$.toProperty()
 }

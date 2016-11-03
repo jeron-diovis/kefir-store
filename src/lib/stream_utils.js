@@ -13,7 +13,7 @@ export const async = $ => $.flatMap(x => (
 export const withInitialState = (stream$, initialState) => (
   !isStream(initialState)
     ? stream$.toProperty(() => initialState)
-    : stream$.merge(initialState.take(1)).toProperty()
+    : stream$.merge(initialState.take(1).toProperty())
 )
 
 const transformStreamWith = ($, fn) => fn($)
