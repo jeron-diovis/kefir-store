@@ -4,6 +4,7 @@ import Model from "../model"
 import Subject from "../lib/Subject"
 import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
+import * as helpers from "./helpers"
 import { getConfig } from "../config"
 
 import parseRow from "./parsers/row"
@@ -17,8 +18,6 @@ import createValidationRow from "./createValidationRow"
 // TODO: add option "validateInitial: Bool" ?
 
 // TODO: helper for combining multiple forms
-
-// TODO: helper for creating stream, validated in response on external event
 
 export default function Form(
   config = [],
@@ -98,26 +97,7 @@ export default function Form(
 
 // ---
 
-Form.toStream = form => {
-  if (S.isStream(form)) {
-    return form
-  }
+Form.toStream = helpers.toStream
+Form.validatedBy = helpers.validatedBy
 
-  const { state$, validity$, validate$, handlers } = form
-
-  // As developer has no access to error streams and can't modify them in some crazy way,
-  // we can be sure that for each incoming value error will be updated synchronously.
-  // It will be either emitted or not, but never will arrive with timeout or smth like this.
-  // So, we can safely .zip these two streams and get reliable atomic updates of entire form.
-  return Kefir.zip([
-    // state$ isn't updated on validation. It's reasonable when state and validity streams are separated.
-    // But here they must emit synchronously, so state must be additionally sampled.
-    S.withSampler(state$, validate$),
-    validity$,
-  ]).combine(
-    Kefir.constant(handlers),
-    ([ state, validity ], handlers) => Object.assign({}, { state, handlers }, validity)
-  ).toProperty()
-}
-
-Form.asStream = (...args) => Form.toStream(Form(...args))
+Form.asStream = F.flow(Form, Form.toStream)

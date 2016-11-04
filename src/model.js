@@ -117,4 +117,4 @@ Model.toStream = model => {
   return state$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign).toProperty()
 }
 
-Model.asStream = (...args) => Model.toStream(Model(...args))
+Model.asStream = F.flow(Model, Model.toStream)
