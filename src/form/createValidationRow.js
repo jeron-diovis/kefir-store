@@ -11,6 +11,6 @@ const validationReducer = (state, list) => list.reduce(errorsReducer, state)
  */
 export default (validate$, config) => {
   const [ streams, reducers ] = F.zip(...config)
-  const input = validate$.flatMapLatest(() => Kefir.zip(streams, (...args) => F.zip(args, reducers)))
+  const input = validate$.flatMapLatest(() => Kefir.zip(streams, (...args) => F.zip(args, reducers)).take(1))
   return [ input, validationReducer ]
 }
