@@ -1,2 +1,2 @@
 export { default as toStream } from "./toStream"
-export { default as validatedBy } from "./validatedBy"
+export { default as validatedOn } from "./validatedOn"

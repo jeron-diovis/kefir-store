@@ -1,46 +1,81 @@
 import Form from "../../src/form"
 
-describe("form :: base: ", () => {
-  it("should be an object { state$, validity$, handlers }", () => {
+describe("form :: base:", () => {
+  it("should be an object { stream: Observable, handlers: Object }", () => {
     const form = Form()
 
     assert.isObject(form)
-    assert.instanceOf(form.state$, Kefir.Observable, "Form does not 'state$' stream")
-    assert.instanceOf(form.validity$, Kefir.Observable, "Form does not have 'validity$' stream")
-    assert.isObject(form.handlers, "Form does not have handlers")
-    assert.isFunction(form.handlers.validate, "form.handlers.validate is not a function")
-    assert.isFunction(form.handlers.reset, "form.handlers.reset is not a function")
+    assert.instanceOf(form.stream, Kefir.Observable)
+    assert.isObject(form.handlers)
   })
 
-  it("should not allow handler with name 'validate'", () => {
-    const setup = () => Form([
-      [ "validate", "some" ]
-    ])
 
-    assert.throws(setup, /Handler name 'validate' is reserved/)
+  describe("built-in handlers:", () => {
+    it("should have built-in handlers 'validate' and 'reset'", () => {
+      const form = Form()
+
+      assert.isFunction(form.handlers.reset)
+      assert.isFunction(form.handlers.validate)
+    })
+
+    it("should not allow to create handler with name 'validate'", () => {
+      const setup = () => Form([
+        [ "validate", "some" ]
+      ])
+
+      assert.throws(setup, /Handler name 'validate' is reserved/)
+    })
+
+    it("should not allow to create handler with name 'reset'", () => {
+      const setup = () => Form([
+        [ "reset", "some" ]
+      ])
+
+      assert.throws(setup, /Handler name 'reset' is reserved/)
+    })
   })
 
-  it("should not allow handler with name 'reset'", () => {
-    const setup = () => Form([
-      [ "reset", "some" ]
-    ])
 
-    assert.throws(setup, /Handler name 'reset' is reserved/)
-  })
+  describe("initial state", () => {
+    it("'state': should be an empty object", () => {
+      const form = Form()
+      const spy = sinon.spy()
 
-  it("should be initially valid", () => {
-    const form = Form()
-    const spyState = sinon.spy()
-    const spyValidity = sinon.spy()
+      form.stream.onValue(spy)
 
-    form.state$.onValue(spyState)
-    form.validity$.onValue(spyValidity)
+      assert.equal(spy.callCount, 1, "Initial state does not emit once")
 
-    assert.equal(spyState.callCount, 1, "Initial state emits more that once")
-    assert.equal(spyValidity.callCount, 1, "Initial validity emits more that once")
-    assert.deepEqual(spyState.getCall(0).args[0], {}, "Initial state is not empty")
-    assert.deepEqual(spyValidity.getCall(0).args[0].errors, {})
-    assert.equal(spyValidity.getCall(0).args[0].isValid, undefined)
+      const result = spy.getCall(0).args[0]
+      assert.deepEqual(result.state, {})
+    })
+
+    it("'errors': should be na empty object", () => {
+      const form = Form()
+      const spy = sinon.spy()
+
+      form.stream.onValue(spy)
+
+      assert.equal(spy.callCount, 1, "Initial state does not emit once")
+
+      const result = spy.getCall(0).args[0]
+      assert.deepEqual(result.errors, {})
+    })
+
+    it("'status': should be an object { isValid: undefined, isValidated: false, isResetted: false }", () => {
+      const form = Form()
+      const spy = sinon.spy()
+
+      form.stream.onValue(spy)
+
+      assert.equal(spy.callCount, 1, "Initial state does not emit once")
+
+      const result = spy.getCall(0).args[0]
+      assert.isObject(result.status, "Form has no status object")
+
+      assert.isUndefined(result.status.isValid, "Initial 'isValid' status is not undefined")
+      assert.isFalse(result.status.isValidated, "Initial 'isValidated' status is not false")
+      assert.isFalse(result.status.isResetted, "Initial 'isResetted' status is not false")
+    })
   })
 
   // ---
@@ -51,17 +86,20 @@ describe("form :: base: ", () => {
     const spy = sinon.spy()
     form$.onValue(spy)
 
-    const state = spy.lastCall.args[0]
-    assert.deepEqual(state.state, { value: "initial value" })
-    assert.deepEqual(state.errors, {})
-    assert.isUndefined(state.isValid)
-    assert.isObject(state.handlers)
-    assert.isFunction(state.handlers.validate)
+    const result = spy.lastCall.args[0]
+    assert.deepEqual(result.state, { value: "initial value" })
+    assert.deepEqual(result.errors, {})
+    assert.deepEqual(result.status, {
+      isValid: undefined,
+      isValidated: false,
+      isResetted: false,
+    })
+    assert.isFunction(result.handlers.validate)
+    assert.isFunction(result.handlers.reset)
   }
 
-
   describe("asStream:", () => {
-    it("should be an Observable<{ state, handlers, errors, isValid }>", () => {
+    it("should be an Observable<{ handlers, state, errors, status }>", () => {
       assert.isFunction(Form.asStream)
 
       testFormStream(Form.asStream(
@@ -69,29 +107,9 @@ describe("form :: base: ", () => {
         { value: "initial value" }
       ))
     })
-
-    it("should emit atomic updates", () => {
-      const subj = Subject()
-      const form$ = Form.asStream([
-        [ [ "setValue", subj ], "value", x => x > 0 ? null : "ERROR" ]
-      ])
-
-      const spy = sinon.spy()
-
-      form$.changes().onValue(spy)
-
-      subj.handler(0)
-
-      assert.equal(spy.callCount, 1)
-      const result = spy.lastCall.args[0]
-      assert.deepEqual(result.state, { value: 0 })
-      assert.deepEqual(result.errors, { value: "ERROR" })
-      assert.deepEqual(result.isValid, false)
-    })
   })
 
-
-  describe("toStream", () => {
+  describe("toStream:", () => {
     it("should convert form object into Observable", () => {
       assert.isFunction(Form.toStream)
 
@@ -112,25 +130,35 @@ describe("form :: base: ", () => {
     it("should return state, errors and validity to initial state", () => {
       const form = Form([
         [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
-      ]);
+      ])
 
-      const spyState = sinon.spy();
-      const spyValidity = sinon.spy();
-      form.state$.changes().onValue(spyState);
-      form.validity$.changes().onValue(spyValidity);
+      const spy = sinon.spy()
+      form.stream.changes().onValue(spy)
 
-      form.handlers.setValue(0);
-      form.handlers.reset();
+      form.handlers.setValue(0)
+      form.handlers.reset()
 
-      assert.equal(spyState.callCount, 2);
-      assert.equal(spyValidity.callCount, 2);
+      assert.equal(spy.callCount, 2)
 
-      assert.deepEqual(spyState.lastCall.args[0], {});
-      assert.deepEqual(spyValidity.lastCall.args[0], {
-        errors: {},
-        isValid: undefined,
-        isValidated: false,
+      assert.deepEqual(spy.getCall(0).args[0], {
+        state: { value: 0 },
+        errors: { value: "ERROR" },
+        status: {
+          isValid: false,
+          isValidated: false,
+          isResetted: false,
+        }
       });
+
+      assert.deepEqual(spy.getCall(1).args[0], {
+        state: {},
+        errors: {},
+        status: {
+          isValid: undefined,
+          isValidated: false,
+          isResetted: true,
+        },
+      })
     })
   })
 })

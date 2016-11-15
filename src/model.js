@@ -64,6 +64,8 @@ export const parseInput = arg => {
 
 // ---
 
+// TODO: need a normal, extendable Parser class
+// Parser::parse, Parser::parseInput, Parser::parseReducer, Parser::parseValidator, Parser::buildRow(input, reducer, validator)
 export const getStreamFromParsedInput = input => {
   if (S.isStream(input)) {
     return input
@@ -101,7 +103,7 @@ export default function Model(cfg = [], ...args) {
   })
 
   return {
-    state$: Stream(config, ...args),
+    stream: Stream(config, ...args),
     handlers,
   }
 }
@@ -113,8 +115,8 @@ Model.toStream = model => {
     return model
   }
 
-  const { state$, handlers } = model
-  return state$.map(state => ({ state })).combine(Kefir.constant({ handlers }), Object.assign).toProperty()
+  const { stream, handlers } = model
+  return stream.combine(Kefir.constant(handlers), (state, handlers) => ({ state, handlers })).toProperty()
 }
 
 Model.asStream = F.flow(Model, Model.toStream)

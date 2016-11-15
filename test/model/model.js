@@ -1,11 +1,11 @@
 import Model from "../../src/model"
 
 describe("model :: base", () => {
-  it("should be an object { state$, handlers }", () => {
+  it("should be an object { stream: Observable, handlers: Object }", () => {
     const model = Model()
 
     assert.isObject(model)
-    assert.instanceOf(model.state$, Kefir.Observable)
+    assert.instanceOf(model.stream, Kefir.Observable)
     assert.deepEqual(model.handlers, {})
   })
 
@@ -13,11 +13,15 @@ describe("model :: base", () => {
 
   const testModelStream = model$ => {
     assert.instanceOf(model$, Kefir.Observable, "Stream model is not a stream")
+
     const spy = sinon.spy()
     model$.onValue(spy)
+
     const data = spy.lastCall.args[0]
+
     assert.property(data, "state")
     assert.deepEqual(data.state, { value: "initial value" })
+
     assert.deepProperty(data, "handlers.setValue")
     assert.isFunction(data.handlers.setValue)
   }

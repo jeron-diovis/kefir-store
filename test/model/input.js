@@ -8,7 +8,7 @@ describe("model :: input", () => {
     ])
 
     const spy = sinon.spy()
-    model.state$.onValue(spy)
+    model.stream.onValue(spy)
 
     subject.handler("value")
 
@@ -23,7 +23,7 @@ describe("model :: input", () => {
     assert.isFunction(model.handlers.setValue, "Handler is not created")
 
     const spy = sinon.spy()
-    model.state$.onValue(spy)
+    model.stream.onValue(spy)
 
     model.handlers.setValue("value")
 
@@ -48,7 +48,7 @@ describe("model :: input", () => {
       assert.isFunction(model.handlers.setValue, "Handler is not created")
 
       const spy = sinon.spy()
-      model.state$.onValue(spy)
+      model.stream.onValue(spy)
 
       model.handlers.setValue("value")
 
@@ -62,15 +62,17 @@ describe("model :: input", () => {
         [ [ "setValue", subject.stream ], "value" ]
       ])
 
+      assert.isFunction(model.handlers.setValue, "Handler is not created")
+
       const spy = sinon.spy()
-      model.state$.onValue(spy)
+      model.stream.changes().onValue(spy)
 
       subject.handler("value_1")
       model.handlers.setValue("value_2")
 
-      assert.equal(spy.callCount, 3)
-      assert.deepEqual(spy.getCall(1).args[0], { value: "value_1" })
-      assert.deepEqual(spy.getCall(2).args[0], { value: "value_2" })
+      assert.equal(spy.callCount, 2)
+      assert.deepEqual(spy.getCall(0).args[0], { value: "value_1" })
+      assert.deepEqual(spy.getCall(1).args[0], { value: "value_2" })
     })
 
     it("with function: should create subject and init it with that function", () => {
@@ -78,8 +80,10 @@ describe("model :: input", () => {
         [ [ "setValue", $ => $.map(x => x * 2) ], "value" ]
       ])
 
+      assert.isFunction(model.handlers.setValue, "Handler is not created")
+
       const spy = sinon.spy()
-      model.state$.onValue(spy)
+      model.stream.onValue(spy)
 
       model.handlers.setValue(2)
 

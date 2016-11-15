@@ -1,4 +1,4 @@
-import Form from "../../src/form"
+import Form from "../../../src/form"
 
 describe("form :: validation :: validate all", () => {
   const toValidator = (test, msg) => (value, state) => test(value, state) ? null : msg
@@ -12,21 +12,20 @@ describe("form :: validation :: validate all", () => {
       bar: 1,
     })
 
-    const spyState = sinon.spy()
-    const spyValid = sinon.spy()
-    form.state$.changes().onValue(spyState)
-    form.validity$.changes().onValue(spyValid)
+    const spy = sinon.spy()
+    form.stream.changes().onValue(spy)
 
     form.handlers.validate()
 
-    assert.equal(spyState.callCount, 0, "State has been updated after validation")
-    assert.equal(spyValid.callCount, 1, "Validity isn't updated after validation")
-    const result = spyValid.lastCall.args[0];
+    assert.equal(spy.callCount, 1, "Validity isn't updated after validation")
+
+    const result = spy.lastCall.args[0];
+
     assert.deepEqual(result.errors, {
       foo: "foo_error",
       bar: null,
     })
-    assert.isFalse(result.isValid, "Form's validity isn't updated properly")
+    assert.isFalse(result.status.isValid, "Form's validity isn't updated properly")
   })
 
   it("should work for Form.asStream", () => {
@@ -56,7 +55,7 @@ describe("form :: validation :: validate all", () => {
       foo: "foo_error",
       bar: null,
     })
-    assert.isFalse(result.isValid, "Form's validity isn't updated properly")
+    assert.isFalse(result.status.isValid, "Form's validity isn't updated properly")
   })
 
   it("should set 'isValidated' prop in validity state", () => {
@@ -76,7 +75,7 @@ describe("form :: validation :: validate all", () => {
     validate()
     subj.handler(1)
 
-    assert.isTrue(spy.getCall(0).args[0].isValidated, "'isValidated' isn't true after calling validate")
-    assert.isFalse(spy.getCall(1).args[0].isValidated, "'isValidated' isn't false after regular store update")
+    assert.isTrue(spy.getCall(0).args[0].status.isValidated, "'isValidated' isn't true after calling validate")
+    assert.isFalse(spy.getCall(1).args[0].status.isValidated, "'isValidated' isn't false after regular store update")
   })
 })

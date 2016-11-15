@@ -5,7 +5,7 @@ import { getConfig } from "../../config"
 export default curry((form, event$) => {
   const prop = getConfig().defaultGetter
   const form$ = toStream(form)
-  const isValid$ = form$.map(prop("isValid"))
+  const isValid$ = form$.map(prop("status")).map(prop("isValid"))
   const validator$ = form$.map(prop("handlers")).map(prop("validate"))
   const validatorCall$ = validator$.sampledBy(event$, fn => fn())
   const validatedState$ = isValid$.sampledBy(validatorCall$)

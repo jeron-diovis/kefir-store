@@ -12,6 +12,17 @@ import createValidationRow from "./createValidationRow"
 
 // ---
 
+const initStatusStream = (input$, form$) => (
+  // activate manually, so in this stream values
+  // are guaranteed to appear before form$
+  input$
+    .changes().onAny(() => {})
+    .bufferBy(form$).map(F.isNotEmptyList)
+    .toProperty(F.constant(false))
+)
+
+// ---
+
 // TODO: "validating" prop to indicate that async validation process is active
 // TODO: or map of validating states for each row?
 
@@ -31,6 +42,8 @@ export default function Form(
   const $validate = Subject()
   const $reset = Subject()
 
+  // ---
+
   const [
     stateConfig = [],
     errorsConfig = [],
@@ -46,7 +59,7 @@ export default function Form(
     ]),
     initialState
   )
-  pool$.plug(stateModel.state$)
+  pool$.plug(stateModel.stream)
 
   // ---
 
@@ -72,32 +85,49 @@ export default function Form(
     CONFIG.getEmptyObject()
   )
 
-  const isValidated$ = $validate.stream
-    // activate manually, so in this stream values appears BEFORE errors$ stream, sampled by validate$.
-    .changes().onValue(() => {})
-    // Whenever errors$ updated, check whether there is a preceding validation event.
-    // If it is, it means that entire form was validated.
-    .bufferBy(errors$).map(F.isNotEmptyList)
-    .toProperty(F.constant(false))
+  const form$ = Kefir.zip(
+    [ // Validation does not update state (which is reasonable),
+      // but to keep state and errors in sync, need to emulate such update
+      S.withSampler(state$, $validate.stream),
+      errors$,
+    ],
+    (state, errors) => ({ state, errors })
+  ).toProperty()
 
-  // "isValid" initially should be undefined.
-  // Until some input arrives, form is neither valid nor invalid – it's not validated at all.
-  const validity$ = errors$.map(errors => ({
-    errors,
-    isValid: CONFIG.isEmptyObject(errors) ? undefined : CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError),
-  }))
+  // ---
+
+  const isValidated$ = initStatusStream($validate.stream, form$)
+  const isResetted$ = initStatusStream($reset.stream, form$)
+  const isValid$ = errors$
+    // Until some interaction happens (any field updated or form validated),
+    // form is neither valid nor invalid – it's not validated at all, so "isValid" is undefined.
+    .changes()
+    .map(errors => CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError))
+    .toProperty(F.constant(undefined))
+    // Reset also returns status to initial undefined state
+    .zip(isResetted$, (isValid, isResetted) => isResetted ? undefined : isValid)
+
+  const status$ = Kefir.zip(
+    [ isValidated$, isResetted$, isValid$ ],
+    (isValidated, isResetted, isValid) => ({ isValidated, isResetted, isValid })
+  )
+
+  // ---
 
   return {
+    stream: (
+      Kefir.zip(
+        [ form$, status$ ],
+        (form, status) => Object.assign(form, { status })
+      ).toProperty()
+    ),
     handlers: stateModel.handlers,
-    state$,
-    validity$: S.withLatestFrom(validity$, isValidated$, CONFIG.defaultSetter("isValidated")).toProperty(),
-    validate$: $validate.stream.changes(),
   }
 }
 
 // ---
 
 Form.toStream = helpers.toStream
-Form.validatedBy = helpers.validatedBy
-
 Form.asStream = F.flow(Form, Form.toStream)
+
+Form.validatedOn = helpers.validatedOn

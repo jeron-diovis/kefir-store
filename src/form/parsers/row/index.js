@@ -14,17 +14,22 @@ const getErrorProp = F.prop("error")
 export default (state$, validate$) => ([ input, reducer, _validator ]) => {
   const [ validator, validatorOptions ] = parseValidator(reducer, _validator)
 
-  // nothing to do here, it's just a regular model field
-  if (validator === undefined) {
-    return [
-      [ [ input, reducer ] ],
-    ]
-  }
-
   // Intercept input stream and replace it with one filtered by validation results
 
   const parsedInput = InputAPI.parseInput(input)
   const input$ = InputAPI.getStreamFromParsedInput(parsedInput)
+
+  if (validator === undefined) {
+    return [
+      // just a regular model field:
+      [ [ parsedInput, reducer ] ],
+      // Non-validated field should react in the same way as validated one:
+      // emit errors when input changed and when entire form is validated.
+      // It should change effectively nothing, but value should be emitted.
+      [ input$, F.id ],
+      [ validate$, F.id ],
+    ]
+  }
 
   // Each input value is validated.
   // Each value should be emitted synchronously with validation result for it.
@@ -64,16 +69,13 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
 
     // validation of particular input when it changes:
     [
-      validatedInput$.map(getErrorProp).skipDuplicates(F.equals),
+      validatedInput$.map(getErrorProp),
       CONFIG.defaultSetter(validatorOptions.key),
     ],
 
     // validation of particular input when entire current state validated:
     [
-      createErrorStream(state$.sampledBy(validate$).map(validatorOptions.get), state$, validator).toProperty()
-        // Must activate manually, so it's ready to react to values from validate$ stream.
-        // Otherwise it gets first subscriber only AFTER signal from validate$ – which means, that signal is actually ignored.
-        .onAny(() => {}),
+      createErrorStream(state$.sampledBy(validate$).map(validatorOptions.get), state$, validator),
       CONFIG.defaultSetter(validatorOptions.key),
     ],
   ]

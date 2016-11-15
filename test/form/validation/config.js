@@ -1,6 +1,6 @@
-import Form from "../../src/form"
+import Form from "../../../src/form"
 
-describe("form :: validator config: ", () => {
+describe("form :: validation :: validator config:", () => {
   it("should be a [ Function, { get: Function, set: Function, key: String } ]", () => {
     const options = {
       get: () => {},
@@ -41,12 +41,14 @@ describe("form :: validator config: ", () => {
   })
 
 
-  it("should also support validator as stream", () => {
+  it("should support validator as stream", () => {
     FakeAsync(tick => {
       const subj = Subject();
 
       const form$ = Form.asStream([
-        [ [ "setValue", subj ], "value",
+        [
+          [ "setValue", subj ],
+          "value",
           Kefir.constant($ => $.delay().map(([ value, state ]) => (
             value === state.equalTo ? null : "ERROR"
           )))
@@ -68,8 +70,8 @@ describe("form :: validator config: ", () => {
     })
   })
 
-
-  describe("options: ", () => {
+  // TODO: check that options can be just a string
+  describe("options:", () => {
     let validator
     const ERROR_MSG = "ERROR"
     const defaultOptions = {
@@ -99,9 +101,9 @@ describe("form :: validator config: ", () => {
       })
 
       const spy = sinon.spy()
-      form.validity$.map(x => x.errors).onValue(spy)
+      form.stream.onValue(spy)
       form.handlers.setValue(-1)
-      assert.deepEqual(spy.lastCall.args[0], { my_error: ERROR_MSG })
+      assert.deepEqual(spy.lastCall.args[0].errors, { my_error: ERROR_MSG })
     })
 
     it("'set': should describe how to update state when input is invalid", () => {
@@ -116,9 +118,9 @@ describe("form :: validator config: ", () => {
       })
 
       const spy = sinon.spy()
-      form.state$.onValue(spy)
+      form.stream.onValue(spy)
       form.handlers.setValue(-1)
-      assert.deepEqual(spy.lastCall.args[0], { value: -2 })
+      assert.deepEqual(spy.lastCall.args[0].state, { value: -2 })
     })
 
 
@@ -137,13 +139,47 @@ describe("form :: validator config: ", () => {
       })
 
       const spy = sinon.spy()
-      form.validity$.changes().onValue(spy)
+      form.stream.changes().onValue(spy)
 
       form.handlers.validate()
 
       const result = spy.lastCall.args[0]
       assert.deepEqual(result.errors, {
         value: ERROR_MSG,
+      })
+    })
+
+    describe("as string", () => {
+      it("should be used as error key and as prop name for getter/setter", () => {
+        const validator = sinon.spy(x => x > 0 ? null : ERROR_MSG)
+
+        const form = Form([
+          [
+            "setValue",
+            (state, value) => ({ ...state, value }),
+            [
+              validator,
+              "value"
+            ]
+          ],
+        ], {
+          value: null
+        })
+
+        const spy = sinon.spy()
+        form.stream.changes().onValue(spy)
+
+        form.handlers.setValue(0)
+        form.handlers.validate()
+
+        assert.equal(spy.callCount, 2)
+        assert.equal(validator.callCount, 2)
+
+        assert.deepEqual(spy.getCall(0).args[0].state, { value: 0 })
+        assert.deepEqual(spy.getCall(0).args[0].errors, { value: ERROR_MSG })
+
+        assert.deepEqual(validator.getCall(0).args, [ 0, { value: null } ])
+        assert.deepEqual(validator.getCall(1).args, [ 0, { value: 0 } ])
       })
     })
   })

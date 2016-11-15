@@ -1,62 +1,151 @@
 import Form from "../../src/form"
 
-describe("form :: helpers:", () => {
-  describe("validatedBy:", () => {
-    it("should be a static function", () => {
-      assert.isFunction(Form.validatedBy)
-    })
+describe("form :: helpers :: validatedOn:", () => {
+  it("should be a static function", () => {
+    assert.isFunction(Form.validatedOn)
+  })
 
-    it("should run validation and emit form state if it is valid", () => {
+  describe("should run validation and emit form state if it is valid", () => {
+    it("when initial state is valid", () => {
       const form = Form([
         [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
       ], {
         value: 1
       })
 
-      const subj = Subject()
+      const $validate = Subject()
 
-      const spyState = sinon.spy()
-      const spyValid = sinon.spy()
-      form.validity$.changes().onValue(spyValid)
-      Form.validatedBy(form, subj.stream).onValue(spyState)
+      const spyForm = sinon.spy()
+      const spyValidState = sinon.spy()
 
-      subj.handler()
+      form.stream.changes().onValue(spyForm)
+      Form.validatedOn(form, $validate.stream).onValue(spyValidState)
 
-      assert.equal(spyValid.callCount, 1)
-      assert.deepEqual(spyValid.lastCall.args[0].isValid, true)
+      assert.equal(spyValidState.callCount, 0)
 
-      assert.equal(spyState.callCount, 1)
-      assert.deepEqual(spyState.lastCall.args[0], { value: 1 })
+      $validate.handler()
+
+      assert.equal(spyForm.callCount, 1)
+      assert.isTrue(spyForm.getCall(0).args[0].status.isValid)
+
+      assert.equal(spyValidState.callCount, 1)
+      assert.deepEqual(spyValidState.getCall(0).args[0], { value: 1 })
 
       form.handlers.setValue(0)
-      subj.handler()
+      $validate.handler()
 
-      assert.equal(spyValid.callCount, 3)
-      assert.deepEqual(spyValid.lastCall.args[0].isValid, false)
-      assert.equal(spyState.callCount, 1)
+      assert.equal(spyForm.callCount, 3)
+      assert.isFalse(spyForm.lastCall.args[0].status.isValid)
+      assert.equal(spyValidState.callCount, 1)
     })
 
-    it("should accept form as stream too", () => {
-      const form$ = Form.asStream([
+    it("when initial state is invalid", () => {
+      const form = Form([
         [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
       ], {
-        value: 1
+        value: 0
       })
 
-      const subj = Subject()
+      const $validate = Subject()
 
-      const spyState = sinon.spy()
-      const spyValid = sinon.spy()
-      form$.changes().onValue(spyValid)
-      Form.validatedBy(form$, subj.stream).onValue(spyState)
+      const spyForm = sinon.spy()
+      const spyValidState = sinon.spy()
 
-      subj.handler()
+      form.stream.changes().onValue(spyForm)
+      Form.validatedOn(form, $validate.stream).onValue(spyValidState)
 
-      assert.equal(spyValid.callCount, 1)
-      assert.deepEqual(spyValid.lastCall.args[0].isValid, true)
+      assert.equal(spyValidState.callCount, 0)
 
-      assert.equal(spyState.callCount, 1)
-      assert.deepEqual(spyState.lastCall.args[0], { value: 1 })
+      $validate.handler()
+
+      assert.equal(spyForm.callCount, 1)
+      assert.isFalse(spyForm.getCall(0).args[0].status.isValid)
+
+      assert.equal(spyValidState.callCount, 0)
+
+      form.handlers.setValue(1)
+      $validate.handler()
+
+      assert.equal(spyForm.callCount, 3)
+      assert.isTrue(spyForm.lastCall.args[0].status.isValid)
+
+      assert.equal(spyValidState.callCount, 1)
+      assert.deepEqual(spyValidState.getCall(0).args[0], { value: 1 })
     })
+
+
+    it("when form has no validators", () => {
+      const form = Form([
+        [ "setValue", "value" ]
+      ], {
+        value: 0
+      })
+
+      const $validate = Subject()
+
+      const spyForm = sinon.spy()
+      const spyValidState = sinon.spy()
+
+      form.stream.changes().onValue(spyForm)
+      Form.validatedOn(form, $validate.stream).onValue(spyValidState)
+
+      assert.equal(spyValidState.callCount, 0, "Validated state emits before validation event")
+
+      $validate.handler()
+
+      assert.equal(spyForm.callCount, 1, "Form isn't updated after validation")
+      assert.isTrue(spyForm.getCall(0).args[0].status.isValid)
+
+      assert.equal(spyValidState.callCount, 1, "Validated state is not updated")
+      assert.deepEqual(spyValidState.getCall(0).args[0], { value: 0 })
+    })
+
+
+    it("when form has no fields at all", () => {
+      const form = Form([], { value: 0 })
+
+      const $validate = Subject()
+
+      const spyForm = sinon.spy()
+      const spyValidState = sinon.spy()
+
+      form.stream.changes().onValue(spyForm)
+      Form.validatedOn(form, $validate.stream).onValue(spyValidState)
+
+      assert.equal(spyValidState.callCount, 0, "Validated state emits before validation event")
+
+      $validate.handler()
+
+      assert.equal(spyForm.callCount, 1, "Form isn't updated after validation")
+      assert.isTrue(spyForm.getCall(0).args[0].status.isValid)
+
+      assert.equal(spyValidState.callCount, 1, "Validated state is not updated")
+      assert.deepEqual(spyValidState.getCall(0).args[0], { value: 0 })
+    })
+  })
+
+
+  it("should accept form as stream", () => {
+    const form$ = Form.asStream([
+      [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
+    ], {
+      value: 1
+    })
+
+    const subj = Subject()
+
+    const spyForm = sinon.spy()
+    const spyValidState = sinon.spy()
+    form$.changes().onValue(spyForm)
+
+    Form.validatedOn(form$, subj.stream).onValue(spyValidState)
+
+    subj.handler()
+
+    assert.equal(spyForm.callCount, 1)
+    assert.isTrue(spyForm.lastCall.args[0].status.isValid)
+
+    assert.equal(spyValidState.callCount, 1)
+    assert.deepEqual(spyValidState.lastCall.args[0], { value: 1 })
   })
 })
