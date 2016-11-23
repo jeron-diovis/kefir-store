@@ -23,13 +23,6 @@ const initStatusStream = (input$, form$) => (
 
 // ---
 
-// TODO: "validating" prop to indicate that async validation process is active
-// TODO: or map of validating states for each row?
-
-// TODO: add option "validateInitial: Bool" ?
-
-// TODO: helper for combining multiple forms
-
 export default function Form(
   config = [],
   initialState = getConfig().getEmptyObject()
@@ -131,3 +124,4 @@ Form.toStream = helpers.toStream
 Form.asStream = F.flow(Form, Form.toStream)
 
 Form.validatedOn = helpers.validatedOn
+Form.combine = helpers.combine

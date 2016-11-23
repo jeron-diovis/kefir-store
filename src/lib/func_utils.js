@@ -7,5 +7,6 @@ export { default as equals } from "lodash/isEqual"
 export { default as flatten } from "lodash/flatten"
 export { default as flow } from "lodash/flow"
 export { default as curry } from "lodash/curry"
+export { default as entries } from "lodash/toPairs"
 
 export const isNotEmptyList = x => x.length > 0

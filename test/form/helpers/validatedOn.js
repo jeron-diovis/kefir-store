@@ -1,4 +1,4 @@
-import Form from "../../src/form"
+import Form from "../../../src/form"
 
 describe("form :: helpers :: validatedOn:", () => {
   it("should be a static function", () => {
