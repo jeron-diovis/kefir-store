@@ -1,4 +1,4 @@
-import Stream from "../src/stream"
+import { Stream } from "../src"
 
 describe("basic stream", () => {
   it("should create a property stream with empty object by default", () => {

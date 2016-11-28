@@ -1,4 +1,4 @@
-import Form from "../../src/form"
+import { Form } from "../../src"
 
 describe("form :: base:", () => {
   it("should be an object { stream: Observable, handlers: Object }", () => {

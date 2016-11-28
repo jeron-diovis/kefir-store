@@ -1,4 +1,4 @@
-import stream from "../src/stream"
+import { Stream } from "../src"
 import Immutable from "immutable"
 import { setConfig } from "../src/config"
 import defaultConfig from "../src/config/default"
@@ -17,7 +17,7 @@ describe("configuration", () => {
 
   describe("ImmutableJS", () => {
     it("default state", () => {
-      const store = stream()
+      const store = Stream()
       const spy = sinon.spy()
       store.onValue(spy)
 
@@ -28,7 +28,7 @@ describe("configuration", () => {
 
     it("default update named prop", () => {
       const subject = Subject()
-      const store = stream([
+      const store = Stream([
         [ subject.stream, "deep.nested.value" ]
       ])
 

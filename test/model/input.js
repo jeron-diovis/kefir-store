@@ -1,4 +1,4 @@
-import Model from "../../src/model"
+import { Model } from "../../src"
 
 describe("model :: input", () => {
   it("as stream: should work just as regular store", () => {

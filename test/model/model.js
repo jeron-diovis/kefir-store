@@ -1,4 +1,4 @@
-import Model from "../../src/model"
+import { Model } from "../../src"
 
 describe("model :: base", () => {
   it("should be an object { stream: Observable, handlers: Object }", () => {

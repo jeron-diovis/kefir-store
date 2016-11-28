@@ -1,4 +1,4 @@
-import Form from "../../../src/form"
+import { Form } from "../../../src"
 
 describe("form :: validation :: validate all", () => {
   const toValidator = (test, msg) => (value, state) => test(value, state) ? null : msg

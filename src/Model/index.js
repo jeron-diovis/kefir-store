@@ -1,8 +1,8 @@
 import Kefir from "kefir"
-import Stream from "./stream"
-import Subject from "./lib/Subject"
-import * as F from "./lib/func_utils"
-import * as S from "./lib/stream_utils"
+import Stream from "../Stream"
+import Subject from "../lib/Subject"
+import * as F from "../lib/func_utils"
+import * as S from "../lib/stream_utils"
 
 // ---
 

@@ -1,4 +1,4 @@
-import Form from "../../../src/form"
+import { Form } from "../../../src"
 
 describe("form :: validation :: validator config:", () => {
   it("should be a [ Function, { get: Function, set: Function, key: String } ]", () => {

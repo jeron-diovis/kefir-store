@@ -1,4 +1,4 @@
-import Form from "../../../src/form"
+import { Form } from "../../../src"
 
 describe("form :: helpers :: combine:", () => {
   it("should be a static function", () => {

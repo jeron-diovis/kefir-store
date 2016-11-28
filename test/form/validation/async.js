@@ -1,4 +1,4 @@
-import Form from "../../../src/form"
+import { Form } from "../../../src"
 
 describe("form :: validation :: async validators:", () => {
   it("should support promises", () => {

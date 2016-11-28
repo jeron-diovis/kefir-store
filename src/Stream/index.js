@@ -1,7 +1,7 @@
 import Kefir from "kefir"
-import * as F from "./lib/func_utils"
-import * as S from "./lib/stream_utils"
-import { getConfig } from "./config"
+import * as F from "../lib/func_utils"
+import * as S from "../lib/stream_utils"
+import { getConfig } from "../config"
 
 const createInputStream = state$ => ([ input$, reducer ]) => {
   if (!S.isStream(input$)) {
