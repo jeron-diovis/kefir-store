@@ -1,8 +1,8 @@
 import Kefir from "kefir"
-import * as S from "../../lib/stream_utils"
+import { isStream } from "../../lib/func_utils"
 
 export default form => {
-  if (S.isStream(form)) {
+  if (isStream(form)) {
     return form
   }
 

@@ -1,4 +1,4 @@
-import { isStream } from "../../lib/stream_utils"
+import * as F from "../../lib/func_utils"
 import { getConfig } from "../../config"
 
 const createValidatorOptionsFromProp = prop => ({
@@ -14,7 +14,7 @@ export default function parseValidator(reducer, validator) {
 
   let opts
 
-  if (typeof reducer === "string") {
+  if (F.isString(reducer)) {
     opts = createValidatorOptionsFromProp(reducer)
   }
 
@@ -29,12 +29,12 @@ export default function parseValidator(reducer, validator) {
 
     [ validator, opts ] = validator
 
-    if (typeof opts === "string") {
+    if (F.isString(opts)) {
       opts = createValidatorOptionsFromProp(opts)
     }
   }
 
-  if (!(typeof validator === "function" || isStream(validator))) {
+  if (!(F.isFunction(validator) || F.isStream(validator))) {
     throw new Error(`[kefir-store :: form] Validation config.
       Validator must be a function or an Observable.
       Current: ${JSON.stringify(validator)}
@@ -43,9 +43,9 @@ export default function parseValidator(reducer, validator) {
 
   if (!(
     opts != null
-    && typeof opts.get === "function"
-    && typeof opts.set === "function"
-    && typeof opts.key === "string"
+    && F.isFunction(opts.get)
+    && F.isFunction(opts.set)
+    && F.isString(opts.key)
   )) {
     throw new Error(`[kefir-store :: form] Incomplete validation config.
       Unless reducer defined as a string, you should define validator with options:

@@ -2,7 +2,6 @@ import Kefir from "kefir"
 import Stream from "../Stream"
 import Subject from "../lib/Subject"
 import * as F from "../lib/func_utils"
-import * as S from "../lib/stream_utils"
 
 // ---
 
@@ -16,11 +15,11 @@ const parseCompositeInput = setLast(arg => {
     return arg
   }
 
-  if (S.isStream(arg)) {
+  if (F.isStream(arg)) {
     return Subject($ => $.merge(arg))
   }
 
-  if (typeof arg === "function") {
+  if (F.isFunction(arg)) {
     return Subject(arg)
   }
 
@@ -33,18 +32,18 @@ const parseCompositeInput = setLast(arg => {
 
 export const parseInput = arg => {
   // standard format
-  if (S.isStream(arg)) {
+  if (F.isStream(arg)) {
     return arg
   }
 
-  if (typeof arg === "string") {
+  if (F.isString(arg)) {
     return [ arg, Subject() ]
   }
 
   if (Array.isArray(arg)) {
     const [ key, subject ] = parseCompositeInput(arg)
 
-    if (typeof key !== "string") {
+    if (!F.isString(key)) {
       throw new Error(`[kefir-store :: model] Invalid input.
         If input is an array, it should have following format:
         [ String, Function|Observable|Subject ]
@@ -67,7 +66,7 @@ export const parseInput = arg => {
 // TODO: need a normal, extendable Parser class
 // Parser::parse, Parser::parseInput, Parser::parseReducer, Parser::parseValidator, Parser::buildRow(input, reducer, validator)
 export const getStreamFromParsedInput = input => {
-  if (S.isStream(input)) {
+  if (F.isStream(input)) {
     return input
   }
 
@@ -75,7 +74,7 @@ export const getStreamFromParsedInput = input => {
 }
 
 export const replaceStreamInParsedInput = (input, replace) => {
-  if (S.isStream(input)) {
+  if (F.isStream(input)) {
     return replace
   }
 
@@ -90,7 +89,7 @@ export default function Model(cfg = [], ...args) {
   const handlers = {}
 
   const config = cfg.filter(F.isNotEmptyList).map(setFirst(parseInput)).map(([ parsed, ...rest ]) => {
-    if (S.isStream(parsed)) {
+    if (F.isStream(parsed)) {
       return [ parsed, ...rest ]
     }
 
@@ -111,7 +110,7 @@ export default function Model(cfg = [], ...args) {
 // ---
 
 Model.toStream = model => {
-  if (S.isStream(model)) {
+  if (F.isStream(model)) {
     return model
   }
 

@@ -1,9 +1,10 @@
 import Kefir from "kefir"
+import { isStream } from "../../../lib/func_utils"
 import * as S from "../../../lib/stream_utils"
 
 export default (input$, state$, validator) => (
   S.async(
-    !S.isStream(validator)
+    !isStream(validator)
       ? S.withLatestFrom(input$, state$, validator)
       : S.withTransform(S.withLatestFrom(input$, state$), validator)
   )

@@ -1,6 +1,5 @@
 import Kefir from "kefir"
-
-export const isStream = x => x instanceof Kefir.Observable
+import { isStream } from "./func_utils"
 
 export const withLatestFrom = (a, b, combinator) => Kefir.combine([ a ], [].concat(b), combinator)
 

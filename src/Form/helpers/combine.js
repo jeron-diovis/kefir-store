@@ -100,8 +100,8 @@ export default function combineForms(cfg) {
       )
       .map(x => {
         SPECIAL_STATUSES.forEach(key => {
-          // special status can only be true when corresponding special handler is called
-          // in main stream it's always false
+          // Special status can only be true when corresponding special handler is called.
+          // In main stream it's always false.
           x.status[key] = false
         })
         return x

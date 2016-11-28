@@ -12,7 +12,7 @@ const Subject = (init = F.id) => {
 
 Subject.is = obj => (
   F.isPlainObject(obj)
-  && S.isStream(obj.stream)
+  && F.isStream(obj.stream)
   && typeof obj.handler === "function"
 )
 
