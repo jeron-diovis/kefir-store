@@ -3,7 +3,6 @@ import Subject from "../../lib/Subject"
 import * as F from "../../lib/func_utils"
 import toStream from "./toStream"
 
-const pluck = F.curry((key, $) => $.map(F.prop(key)))
 const isUndefined = x => x === undefined
 const isTrue = x => x === true
 
@@ -26,14 +25,14 @@ const combine = F.curry((keys, values) => {
     {}
   )
 
-  const statuses = pluck("status", values)
-  const isValid = pluck("isValid", statuses)
+  const statuses = F.pluck("status", values)
+  const isValid = F.pluck("isValid", statuses)
   Object.assign(form.status, {
     isValid: isValid.every(isUndefined) ? undefined : isValid.every(isTrue),
     // For now just gather values from all forms.
     // They will be combined differently in different scenarios.
-    isValidated: pluck("isValidated", statuses),
-    isResetted: pluck("isResetted", statuses),
+    isValidated: F.pluck("isValidated", statuses),
+    isResetted: F.pluck("isResetted", statuses),
   })
 
   return form
@@ -45,12 +44,12 @@ export default function combineForms(cfg) {
 
   const $flag = Subject($ => $.map(F.constant(false)).toProperty(F.constant(true)))
 
-  const combinedHandlers$ = combo$.take(1).map(pluck("handlers")).map(handlers =>
+  const combinedHandlers$ = combo$.take(1).map(F.pluck("handlers")).map(handlers =>
     SPECIAL_HANDLERS.reduce(
       (memo, key) => {
         memo[key] = F.flow(
           $flag.handler, // whenever special handler is called, set filtration flag to false
-          ...pluck(key, handlers)
+          ...F.pluck(key, handlers)
         )
         return memo
       },

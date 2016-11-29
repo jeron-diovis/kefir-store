@@ -6,7 +6,7 @@ export default (input$, state$, validator) => (
   S.async(
     !isStream(validator)
       ? S.withLatestFrom(input$, state$, validator)
-      : S.withTransform(S.withLatestFrom(input$, state$), validator)
+      : S.withTransform(validator, S.withLatestFrom(input$, state$))
   )
   // If validator has thrown and it was not handled, pass exception text directly to form
   .mapErrors(String).flatMapErrors(Kefir.constant)

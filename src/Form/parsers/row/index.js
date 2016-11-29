@@ -22,7 +22,7 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
   if (validator === undefined) {
     return [
       // just a regular model field:
-      [ [ parsedInput, reducer ] ],
+      [ [ [ parsedInput.name, parsedInput.subject ], reducer ] ],
       // Non-validated field should react in the same way as validated one:
       // emit errors when input changed and when entire form is validated.
       // It should change effectively nothing, but value should be emitted.

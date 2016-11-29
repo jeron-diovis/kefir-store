@@ -1,108 +1,26 @@
 import Kefir from "kefir"
 import Stream from "../Stream"
-import Subject from "../lib/Subject"
+import Parser from "./Parser"
 import * as F from "../lib/func_utils"
 
 // ---
 
-const setFirst = fn => ([ first, ...rest ]) => [ fn(first), ...rest ]
-const setLast = fn => list => list.slice(0, -1).concat(fn(list[list.length - 1]))
+// TODO: remove this all when Form parser will be ready
+const tmp_parser = new Parser
+export const parseInput = tmp_parser.parseInput.bind(tmp_parser)
 
-// ---
-
-const parseCompositeInput = setLast(arg => {
-  if (Subject.is(arg)) {
-    return arg
-  }
-
-  if (F.isStream(arg)) {
-    return Subject($ => $.merge(arg))
-  }
-
-  if (F.isFunction(arg)) {
-    return Subject(arg)
-  }
-
-  throw new Error(`[kefir-store :: model] Invalid input.
-    If input is an array, it should have following format:
-    [ String, Function|Observable|Subject ]
-    Current: array second value: ${JSON.stringify(arg)}
-  `)
-})
-
-export const parseInput = arg => {
-  // standard format
-  if (F.isStream(arg)) {
-    return arg
-  }
-
-  if (F.isString(arg)) {
-    return [ arg, Subject() ]
-  }
-
-  if (Array.isArray(arg)) {
-    const [ key, subject ] = parseCompositeInput(arg)
-
-    if (!F.isString(key)) {
-      throw new Error(`[kefir-store :: model] Invalid input.
-        If input is an array, it should have following format:
-        [ String, Function|Observable|Subject ]
-        Current: array first value: ${key}
-      `)
-    }
-
-    return [ key, subject ]
-  }
-
-  throw new Error(`[kefir-store :: model] Invalid input.
-    Input must be either Observable, or String, or array of following format:
-    [ String, Function|Observable|Subject ]
-    Current: ${JSON.stringify(arg)}
-  `)
-}
-
-// ---
-
-// TODO: need a normal, extendable Parser class
-// Parser::parse, Parser::parseInput, Parser::parseReducer, Parser::parseValidator, Parser::buildRow(input, reducer, validator)
-export const getStreamFromParsedInput = input => {
-  if (F.isStream(input)) {
-    return input
-  }
-
-  return input[input.length - 1].stream
-}
+export const getStreamFromParsedInput = input => input.subject.stream
 
 export const replaceStreamInParsedInput = (input, replace) => {
-  if (F.isStream(input)) {
-    return replace
-  }
-
-  input = input.slice()
-  const subject = input.pop()
-  return input.concat({ ...subject, stream: replace })
+  return [ input.name, { ...input.subject, stream: replace } ]
 }
 
 // ---
 
 export default function Model(cfg = [], ...args) {
-  const handlers = {}
-
-  const config = cfg.filter(F.isNotEmptyList).map(setFirst(parseInput)).map(([ parsed, ...rest ]) => {
-    if (F.isStream(parsed)) {
-      return [ parsed, ...rest ]
-    }
-
-    const [ key, subject ] = parsed
-    if (handlers.hasOwnProperty(key)) {
-      throw new Error(`[kefir-store :: model] Handler '${key}' already exists`)
-    }
-    handlers[key] = subject.handler
-    return [ subject.stream, ...rest ]
-  })
-
+  const { rows, handlers } = Parser.parse(cfg)
   return {
-    stream: Stream(config, ...args),
+    stream: Stream(rows, ...args),
     handlers,
   }
 }

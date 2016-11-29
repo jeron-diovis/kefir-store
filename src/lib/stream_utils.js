@@ -1,12 +1,15 @@
 import Kefir from "kefir"
-import { isStream } from "./func_utils"
-
-export const withLatestFrom = (a, b, combinator) => Kefir.combine([ a ], [].concat(b), combinator)
+import { isStream, curry } from "./func_utils"
 
 export const withSampler = (a, b, combinator) => Kefir.merge([ a, a.sampledBy(b, combinator) ])
 
+export const withLatestFrom = (a, b, combinator) => Kefir.combine([ a ], [].concat(b), combinator)
+
+export const of = Kefir.constant
+export const ap = curry((fn$, x$) => withLatestFrom(x$, fn$, (x, fn) => fn(x)))
+
 export const async = $ => $.flatMap(x => (
-  (x && x.then) ? Kefir.fromPromise(x) : Kefir.constant(x))
+  (x && x.then) ? Kefir.fromPromise(x) : of(x))
 )
 
 export const withInitialState = (stream$, initialState) => (
@@ -15,11 +18,4 @@ export const withInitialState = (stream$, initialState) => (
     : stream$.merge(initialState.take(1).toProperty())
 )
 
-const transformStreamWith = ($, fn) => fn($)
-export const withTransform = (stream$, transform$) => (
-  withLatestFrom(
-    Kefir.constant(stream$),
-    transform$,
-    transformStreamWith
-  ).flatMap()
-)
+export const withTransform = curry((fn$, x$) => ap(fn$, of(x$)).flatMapLatest())
