@@ -128,8 +128,17 @@ describe("form :: base:", () => {
 
   describe("reset:", () => {
     it("should return state, errors and validity to initial state", () => {
+      const reducer = sinon.spy((state, value) => ({ ...state, value }))
+
       const form = Form([
-        [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
+        [
+          "setValue",
+          reducer,
+          [
+            x => x > 0 ? null : "ERROR",
+            "value"
+          ]
+        ]
       ])
 
       const spy = sinon.spy()
@@ -137,8 +146,13 @@ describe("form :: base:", () => {
 
       form.handlers.setValue(0)
       form.handlers.reset()
+      form.handlers.setValue(1)
 
-      assert.equal(spy.callCount, 2)
+      assert.equal(reducer.callCount, 1, "Reducer isn't called once")
+      assert.deepEqual(reducer.getCall(0).args[1], 1)
+      assert.deepEqual(reducer.getCall(0).args[0], {}, "Form state is not empty after reset")
+
+      assert.equal(spy.callCount, 3, "Spy isn't called 3 times")
 
       assert.deepEqual(spy.getCall(0).args[0], {
         state: { value: 0 },
@@ -148,7 +162,7 @@ describe("form :: base:", () => {
           isValidated: false,
           isResetted: false,
         }
-      });
+      }, "Form is wrong after setting invalid value");
 
       assert.deepEqual(spy.getCall(1).args[0], {
         state: {},
@@ -158,7 +172,7 @@ describe("form :: base:", () => {
           isValidated: false,
           isResetted: true,
         },
-      })
+      }, "Form is wrong after resetting")
     })
   })
 })
