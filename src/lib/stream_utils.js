@@ -8,9 +8,11 @@ export const withLatestFrom = (a, b, combinator) => Kefir.combine([ a ], [].conc
 export const of = Kefir.constant
 export const ap = curry((fn$, x$) => withLatestFrom(x$, fn$, (x, fn) => fn(x)))
 
+export const ensure = x => isStream(x) ? x : of(x)
+
 export const async = $ => $.flatMap(x => (
-  (x && x.then) ? Kefir.fromPromise(x) : of(x))
-)
+  (x && x.then) ? Kefir.fromPromise(x) : of(x)
+))
 
 export const withInitialState = (stream$, initialState) => (
   !isStream(initialState)

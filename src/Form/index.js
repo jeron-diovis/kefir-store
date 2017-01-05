@@ -1,6 +1,6 @@
 import Kefir from "kefir"
-import Stream from "../stream"
-import Model from "../model"
+import Stream from "../Stream"
+import Model from "../Model"
 import Subject from "../lib/Subject"
 import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
@@ -29,11 +29,11 @@ export default function Form(
 ) {
   const CONFIG = getConfig()
 
-  const pool$ = Kefir.pool()
-  const state$ = pool$.toProperty()
-
   const $validate = Subject()
   const $reset = Subject()
+
+  const pool$ = Kefir.pool()
+  const state$ = S.withInitialState(pool$, initialState)
 
   // ---
 
@@ -46,12 +46,13 @@ export default function Form(
   const stateModel = Model(
     F.flatten(stateConfig).concat([
       [
-        S.withInitialState(Kefir.never(), initialState).sampledBy($reset.stream),
-        (currentState, initialState) => initialState,
+        $reset.stream.flatMap(F.constant(S.ensure(initialState))),
+        (_, x) => x
       ]
     ]),
     initialState
   )
+
   pool$.plug(stateModel.stream)
 
   // ---
@@ -73,7 +74,7 @@ export default function Form(
   const errors$ = Stream(
     errorsConfig.concat([
       createValidationRow($validate.stream, validatedConfig),
-      [ $reset.stream, () => CONFIG.getEmptyObject() ]
+      [ $reset.stream, CONFIG.getEmptyObject ],
     ]),
     CONFIG.getEmptyObject()
   )
