@@ -7,7 +7,7 @@ const createInputStream = state$ => ([ input$, reducer$ ]) => (
   S.withTransform(reducer$, state$.sampledBy(input$, Array.of))
 )
 
-export default function Stream(config = [], initialState = getConfig().getEmptyObject()) {
+export default function Stream(config, initialState = getConfig().getEmptyObject()) {
   const pool$ = Kefir.pool()
   const state$ = S.withInitialState(pool$, initialState)
   pool$.plug(Kefir.merge(Parser.parse(config).map(createInputStream(state$))))

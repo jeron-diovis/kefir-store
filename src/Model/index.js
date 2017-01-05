@@ -17,8 +17,8 @@ export const replaceStreamInParsedInput = (input, replace) => {
 
 // ---
 
-export default function Model(cfg = [], ...args) {
-  const { rows, handlers } = Parser.parse(cfg)
+export default function Model(config, ...args) {
+  const { rows, handlers } = Parser.parse(config)
   return {
     stream: Stream(rows, ...args),
     handlers,
