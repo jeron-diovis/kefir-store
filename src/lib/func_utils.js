@@ -11,6 +11,7 @@ export { default as zip } from "lodash/zip"
 export { default as equals } from "lodash/isEqual"
 export { default as flatten } from "lodash/flatten"
 export { default as flow } from "lodash/flow"
+export { default as compose } from "lodash/flowRight"
 export { default as spread } from "lodash/spread"
 export { default as entries } from "lodash/toPairs"
 

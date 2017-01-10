@@ -1,13 +1,3 @@
-import Kefir from "kefir"
-import { isStream } from "../../../lib/func_utils"
+// TODO: remove this file
 import * as S from "../../../lib/stream_utils"
-
-export default (input$, state$, validator) => (
-  S.async(
-    !isStream(validator)
-      ? S.withLatestFrom(input$, state$, validator)
-      : S.withTransform(validator, S.withLatestFrom(input$, state$))
-  )
-  // If validator has thrown and it was not handled, pass exception text directly to form
-  .mapErrors(String).flatMapErrors(Kefir.constant)
-)
+export default (input$, state$, validator) => validator.ap(S.withLatestFrom(input$, state$))

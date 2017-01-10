@@ -7,6 +7,8 @@ import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
 import { getConfig } from "../config"
 
+import Parser from "./Parser"
+
 import parseRow from "./parsers/row"
 import createValidationRow from "./createValidationRow"
 
@@ -37,11 +39,13 @@ export default function Form(
 
   // ---
 
+  const { rows, handlers } = Parser.parse(config)
+
   const [
     stateConfig = [],
     errorsConfig = [],
     validatedConfig = []
-  ] = F.zip(...config.filter(F.isNotEmptyList).map(parseRow(state$, $validate.stream)))
+  ] = F.zip(...rows.map(parseRow(state$, $validate.stream)))
 
   const stateModel = Model(
     F.flatten(stateConfig).concat([
@@ -53,19 +57,13 @@ export default function Form(
     initialState
   )
 
+  stateModel.handlers = {
+    ...handlers,
+    reset: $reset.handler,
+    validate: $validate.handler,
+  }
+
   pool$.plug(stateModel.stream)
-
-  // ---
-
-  // reserved handlers
-  if ("validate" in stateModel.handlers) {
-    throw new Error("[kefir-store :: form] Handler name 'validate' is reserved")
-  }
-  if ("reset" in stateModel.handlers) {
-    throw new Error("[kefir-store :: form] Handler name 'reset' is reserved")
-  }
-  stateModel.handlers.validate = $validate.handler
-  stateModel.handlers.reset = $reset.handler
 
   // ---
 

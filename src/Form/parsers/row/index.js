@@ -1,9 +1,7 @@
-import * as InputAPI from "../../../Model"
 import * as F from "../../../lib/func_utils"
 import * as S from "../../../lib/stream_utils"
 import { getConfig } from "../../../config"
 
-import parseValidator from "../validator"
 import createErrorStream from "./createErrorStream"
 import validatedValue from "./createValidatedValueStream"
 
@@ -24,18 +22,11 @@ const toIndexedStream = $ => (
 
 // ---
 
-export default (state$, validate$) => ([ input, reducer, _validator ]) => {
-  const [ validator, validatorOptions ] = parseValidator(reducer, _validator)
-
-  // Intercept input stream and replace it with one filtered by validation results
-
-  const parsedInput = InputAPI.parseInput(input)
-  const input$ = InputAPI.getStreamFromParsedInput(parsedInput)
-
+export default (state$, validate$) => ([ input$, reducer, validator ]) => {
   if (validator === undefined) {
     return [
       // just a regular model field:
-      [ [ [ parsedInput.name, parsedInput.subject ], reducer ] ],
+      [ [ input$, reducer ] ],
       // Non-validated field should react in the same way as validated one:
       // emit errors when input changed and when entire form is validated.
       // It should change effectively nothing, but value should be emitted.
@@ -65,7 +56,7 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
     // state updates:
     [
       [
-        InputAPI.replaceStreamInParsedInput(parsedInput, validatedValue(true, validatedInput$)),
+        validatedValue(true, validatedInput$),
         reducer,
       ],
       // If value is invalid, reducer for it should not be executed (cause it can lead to errors),
@@ -73,20 +64,20 @@ export default (state$, validate$) => ([ input, reducer, _validator ]) => {
       // (important for React's controlled inputs, for example)
       [
         validatedValue(false, validatedInput$),
-        validatorOptions.set,
+        validator.opts.set,
       ],
     ],
 
     // validation of particular input when it changes:
     [
       validatedInput$.map(getErrorProp),
-      CONFIG.defaultSetter(validatorOptions.key),
+      CONFIG.defaultSetter(validator.opts.key),
     ],
 
     // validation of particular input when entire current state validated:
     [
-      createErrorStream(state$.sampledBy(validate$).map(validatorOptions.get), state$, validator),
-      CONFIG.defaultSetter(validatorOptions.key),
+      createErrorStream(state$.sampledBy(validate$).map(validator.opts.get), state$, validator),
+      CONFIG.defaultSetter(validator.opts.key),
     ],
   ]
 }
