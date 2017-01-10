@@ -2,7 +2,7 @@ import ModelParser from "../Model/Parser"
 
 import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
-import { getConfig } from "../config"
+import CONFIG from "../config"
 
 // ---
 
@@ -18,8 +18,8 @@ const toErrorStream = F.flow(
 )
 
 const createValidatorOptionsFromProp = prop => ({
-  get: getConfig().defaultGetter(prop),
-  set: getConfig().defaultSetter(prop),
+  get: CONFIG.defaultGetter(prop),
+  set: CONFIG.defaultSetter(prop),
   key: prop,
 })
 

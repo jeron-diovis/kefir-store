@@ -5,7 +5,7 @@ import Subject from "../lib/Subject"
 import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
-import { getConfig } from "../config"
+import CONFIG from "../config"
 
 import Parser from "./Parser"
 
@@ -27,10 +27,8 @@ const initStatusStream = (input$, form$) => (
 
 export default function Form(
   config = [],
-  initialState = getConfig().getEmptyObject()
+  initialState = CONFIG.getEmptyObject()
 ) {
-  const CONFIG = getConfig()
-
   const $validate = Subject()
   const $reset = Subject()
 

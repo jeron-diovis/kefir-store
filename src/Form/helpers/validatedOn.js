@@ -1,9 +1,9 @@
 import { curry } from "../../lib/func_utils"
 import toStream from "./toStream"
-import { getConfig } from "../../config"
+import CONFIG from "../../config"
 
 export default curry((form, event$) => {
-  const prop = getConfig().defaultGetter
+  const prop = CONFIG.defaultGetter
   const form$ = toStream(form)
   const isValid$ = form$.map(prop("status")).map(prop("isValid"))
   const validator$ = form$.map(prop("handlers")).map(prop("validate"))

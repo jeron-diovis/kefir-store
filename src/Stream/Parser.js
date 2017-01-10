@@ -1,6 +1,6 @@
 import Kefir from "kefir"
 import * as F from "../lib/func_utils"
-import { getConfig } from "../config"
+import CONFIG from "../config"
 
 const isNotEmptyList = x => x.length > 0
 
@@ -30,7 +30,7 @@ export default class StreamParser {
 
   parseReducer(x) {
     if (F.isString(x)) {
-      x = getConfig().defaultSetter(x)
+      x = CONFIG.defaultSetter(x)
     }
 
     if (F.isFunction(x)) {

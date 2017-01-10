@@ -1,9 +1,9 @@
 import * as F from "../../lib/func_utils"
-import { getConfig } from "../../config"
+import CONFIG from "../../config"
 
 const createValidatorOptionsFromProp = prop => ({
-  get: getConfig().defaultGetter(prop),
-  set: getConfig().defaultSetter(prop),
+  get: CONFIG.defaultGetter(prop),
+  set: CONFIG.defaultSetter(prop),
   key: prop,
 })
 

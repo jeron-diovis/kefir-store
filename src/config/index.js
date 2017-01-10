@@ -1,7 +1,22 @@
 import defaultConfig from "./default"
-let config = defaultConfig
 
-export const getConfig = () => config
+const current = { ...defaultConfig }
+
 export const setConfig = cfg => {
-  config = Object.assign({}, defaultConfig, cfg)
+  Object.assign(current, cfg)
 }
+
+export default [
+  "getEmptyObject",
+  "isEmptyObject",
+  "defaultGetter",
+  "defaultSetter",
+  "getValuesList",
+  "isNotValidationError",
+].reduce(
+  (memo, key) => {
+    memo[key] = (...args) => current[key](...args)
+    return memo
+  },
+  {}
+)

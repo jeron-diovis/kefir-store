@@ -1,10 +1,10 @@
 import * as F from "../../../lib/func_utils"
-import { getConfig } from "../../../config"
+import CONFIG from "../../../config"
 
 const getValueProp = F.prop("value")
 const getErrorProp = F.prop("error")
 
-const isValidInput = x => getConfig().isNotValidationError(getErrorProp(x))
+const isValidInput = x => CONFIG.isNotValidationError(getErrorProp(x))
 isValidInput.not = x => !isValidInput(x)
 
 /**

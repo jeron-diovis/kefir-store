@@ -1,6 +1,6 @@
 import * as F from "../../../lib/func_utils"
 import * as S from "../../../lib/stream_utils"
-import { getConfig } from "../../../config"
+import CONFIG from "../../../config"
 
 import createErrorStream from "./createErrorStream"
 import validatedValue from "./createValidatedValueStream"
@@ -49,8 +49,6 @@ export default (state$, validate$) => ([ input$, reducer, validator ]) => {
     .map(([ error, input ]) => ({ error: error.value, value: input.value }))
     .toProperty()
   )
-
-  const CONFIG = getConfig()
 
   return [
     // state updates:
