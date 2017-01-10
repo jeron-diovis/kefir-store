@@ -6,14 +6,14 @@ const isNotEmptyList = x => x.length > 0
 
 export default class StreamParser {
   constructor() {
-    this.parseRow = this.parseRow.bind(this)
+    this.parseField = this.parseField.bind(this)
   }
 
   parse(config = []) {
-    return config.filter(isNotEmptyList).map(this.parseRow)
+    return config.filter(isNotEmptyList).map(this.parseField)
   }
 
-  parseRow([ input, reducer ]) {
+  parseField([ input, reducer ]) {
     return [
       this.parseInput(input),
       this.parseReducer(reducer),

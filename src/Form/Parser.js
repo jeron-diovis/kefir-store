@@ -31,6 +31,8 @@ function ensureHandlersValid(handlers) {
   if ("reset" in handlers) {
     throw new Error("[kefir-store :: form] Handler name 'reset' is reserved")
   }
+
+  return handlers
 }
 
 
@@ -41,7 +43,12 @@ function ensureHandlersValid(handlers) {
  */
 function parseValidator(x, opts) {
   if (x === undefined) {
-    return undefined
+    return {
+      ap: F.map(F.constant(undefined)),
+      getFromState: F.id,
+      setError: F.id,
+      setInvalid: F.id,
+    }
   }
 
   let validator = x
@@ -100,23 +107,36 @@ function parseValidator(x, opts) {
 
   return {
     ap: toErrorStream(validator),
-    opts,
+    getFromState: opts.get,
+    setInvalid: opts.set,
+    setError: CONFIG.defaultSetter(opts.key),
   }
 }
+
+// ---
+
+// just for better readability in further code
+const fieldToDict = (
+  ([ input$, reducer$, validator ]) => ({
+    input$, reducer$, validator
+  })
+)
 
 // ---
 
 export default class FormParser extends ModelParser {
 
   parse(...args) {
-    const ret = super.parse(...args)
-    ensureHandlersValid(ret.handlers)
-    return ret
+    const { fields, handlers, } = super.parse(...args)
+    return {
+      fields: fields.map(fieldToDict),
+      handlers: ensureHandlersValid(handlers),
+    }
   }
 
-  parseRow([ input, reducer, validator ]) {
+  parseField([ input, reducer, validator ]) {
     return [
-      ...super.parseRow([ input, reducer ]),
+      ...super.parseField([ input, reducer ]),
       parseValidator(
         validator,
         F.isString(reducer)

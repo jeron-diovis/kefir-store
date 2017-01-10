@@ -3,7 +3,6 @@ var root = __dirname
 var srcRoot = sysPath.join(root, "src")
 
 var webpack = require("webpack")
-var WebpackInfoPlugin = require("webpack-info-plugin")
 var WebpackErrorNotificationPlugin = require("webpack-error-notification")
 
 var isProd = process.env.NODE_ENV === "production"

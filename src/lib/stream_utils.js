@@ -1,5 +1,5 @@
 import Kefir from "kefir"
-import { isStream, curry, negate } from "./func_utils"
+import { isStream, curry } from "./func_utils"
 
 export const withSampler = (a, b, combinator) => Kefir.merge([ a, a.sampledBy(b, combinator) ])
 
@@ -21,8 +21,3 @@ export const withInitialState = (stream$, initialState) => (
 )
 
 export const withTransform = curry((fn$, x$) => ap(fn$, of(x$)).flatMapLatest())
-
-export const partition = curry((predicate, $) => [
-  $.filter(predicate),
-  $.filter(negate(predicate))
-])

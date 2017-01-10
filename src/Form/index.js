@@ -1,16 +1,18 @@
 import Kefir from "kefir"
+
+import Parser from "./Parser"
 import Stream from "../Stream"
-import Model from "../Model"
+
 import Subject from "../lib/Subject"
+
 import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
+
 import CONFIG from "../config"
 
-import Parser from "./Parser"
-
-import parseRow from "./parsers/row"
-import createValidationRow from "./createValidationRow"
+import createFields from "./createFields"
+import createFullValidationField from "./createFullValidationField"
 
 // ---
 
@@ -22,6 +24,8 @@ const initStatusStream = (input$, form$) => (
     .bufferBy(form$).map(F.isNotEmptyList)
     .toProperty(F.constant(false))
 )
+
+const id2 = (_, x) => x
 
 // ---
 
@@ -37,41 +41,38 @@ export default function Form(
 
   // ---
 
-  const { rows, handlers } = Parser.parse(config)
+  const cfg = Parser.parse(config)
+  const fields = createFields(state$, cfg.fields)
 
-  const [
-    stateConfig = [],
-    errorsConfig = [],
-    validatedConfig = []
-  ] = F.zip(...rows.map(parseRow(state$, state$.sampledBy($validate.stream))))
+  // ---
 
-  const stateModel = Model(
-    F.flatten(stateConfig).concat([
+  pool$.plug(Stream(
+    [ ...fields.state,
+
       [
         $reset.stream.flatMap(F.constant(S.ensure(initialState))),
-        (_, x) => x
+        id2
       ]
-    ]),
+    ],
+
     initialState
-  )
-
-  stateModel.handlers = {
-    ...handlers,
-    reset: $reset.handler,
-    validate: $validate.handler,
-  }
-
-  pool$.plug(stateModel.stream)
+  ))
 
   // ---
 
   // Note that errors aren't mapped from state, it's a completely separate stream.
   // Because incoming values are validated, not entire state.
   const errors$ = Stream(
-    errorsConfig.concat([
-      createValidationRow($validate.stream, validatedConfig),
+    [ ...fields.errors,
+
+      createFullValidationField(
+        state$.sampledBy($validate.stream),
+        F.pluck("validator", cfg.fields)
+      ),
+
       [ $reset.stream, CONFIG.getEmptyObject ],
-    ]),
+    ],
+
     CONFIG.getEmptyObject()
   )
 
@@ -111,7 +112,12 @@ export default function Form(
         (form, status) => Object.assign(form, { status })
       ).toProperty()
     ),
-    handlers: stateModel.handlers,
+
+    handlers: {
+      ...cfg.handlers,
+      reset: $reset.handler,
+      validate: $validate.handler,
+    },
   }
 }
 

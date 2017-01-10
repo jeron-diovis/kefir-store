@@ -5,22 +5,10 @@ import * as F from "../lib/func_utils"
 
 // ---
 
-// TODO: remove this all when Form parser will be ready
-const tmp_parser = new Parser
-export const parseInput = tmp_parser.parseInput.bind(tmp_parser)
-
-export const getStreamFromParsedInput = input => input.subject.stream
-
-export const replaceStreamInParsedInput = (input, replace) => {
-  return [ input.name, { ...input.subject, stream: replace } ]
-}
-
-// ---
-
 export default function Model(config, ...args) {
-  const { rows, handlers } = Parser.parse(config)
+  const { fields, handlers } = Parser.parse(config)
   return {
-    stream: Stream(rows, ...args),
+    stream: Stream(fields, ...args),
     handlers,
   }
 }
