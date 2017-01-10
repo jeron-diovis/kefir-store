@@ -23,7 +23,7 @@ describe("form :: validation:", () => {
     form.stream.onValue(() => {}) // activate
     form.handlers.setValue(42)
 
-    assert.equal(validator.callCount, 1, "Validator is not called")
+    assert.equal(validator.callCount, 1, "Validator is not called once")
     assert.deepEqual(validator.lastCall.args, [ 42, { value: 0 } ], "validator does not receive proper arguments")
   })
 
