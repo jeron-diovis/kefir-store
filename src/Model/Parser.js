@@ -81,9 +81,9 @@ export default class ModelParser extends StreamParser {
   }
 
   parse(...args) {
-    const [ inputs = [], reducers = [] ] = F.zip(...super.parse(...args))
+    const [ inputs = [], reducers = [], ...rest ] = F.zip(...super.parse(...args))
     return {
-      rows: F.zip(pluckStreams(inputs), reducers),
+      rows: F.zip(pluckStreams(inputs), reducers, ...rest),
       handlers: inputs.filter(({ name }) => name !== EMPTY_KEY).reduce(handlersReducer, {}),
     }
   }
