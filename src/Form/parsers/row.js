@@ -1,8 +1,6 @@
-import * as F from "../../../lib/func_utils"
-import * as S from "../../../lib/stream_utils"
-import CONFIG from "../../../config"
-
-import createErrorStream from "./createErrorStream"
+import * as F from "../../lib/func_utils"
+import * as S from "../../lib/stream_utils"
+import CONFIG from "../../config"
 
 const getValueProp = F.prop("value")
 const getErrorProp = F.prop("error")
@@ -28,7 +26,7 @@ const splitByValidity = F.flow(
 
 // ---
 
-export default (state$, validate$) => ([ input$, reducer, validator ]) => {
+export default (state$, validatedState$) => ([ input$, reducer, validator ]) => {
   if (validator === undefined) {
     return [
       // just a regular model field:
@@ -37,7 +35,7 @@ export default (state$, validate$) => ([ input$, reducer, validator ]) => {
       // emit errors when input changed and when entire form is validated.
       // It should change effectively nothing, but value should be emitted.
       [ input$, F.id ],
-      [ validate$, F.id ],
+      [ validatedState$, F.id ],
     ]
   }
 
@@ -48,7 +46,7 @@ export default (state$, validate$) => ([ input$, reducer, validator ]) => {
   // then we are no more interested in both prev value and it's validation result.
   const validatedInput$ = (
     S.withLatestFrom(
-      toIndexedStream(createErrorStream(input$, state$, validator)),
+      toIndexedStream(validator.ap(S.withLatestFrom(input$, state$))),
       toIndexedStream(input$)
     )
     .filter(([ error, input ]) => error.idx === input.idx)
@@ -74,7 +72,10 @@ export default (state$, validate$) => ([ input$, reducer, validator ]) => {
 
     // validation of particular input when entire current state validated:
     [
-      createErrorStream(state$.sampledBy(validate$).map(validator.opts.get), state$, validator),
+      validator.ap(S.withLatestFrom(
+        validatedState$.map(validator.opts.get),
+        state$
+      )),
       CONFIG.defaultSetter(validator.opts.key),
     ],
   ]

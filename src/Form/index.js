@@ -43,7 +43,7 @@ export default function Form(
     stateConfig = [],
     errorsConfig = [],
     validatedConfig = []
-  ] = F.zip(...rows.map(parseRow(state$, $validate.stream)))
+  ] = F.zip(...rows.map(parseRow(state$, state$.sampledBy($validate.stream))))
 
   const stateModel = Model(
     F.flatten(stateConfig).concat([
