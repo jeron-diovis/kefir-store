@@ -3,8 +3,8 @@ import * as S from "../../../lib/stream_utils"
 import CONFIG from "../../../config"
 
 import createErrorStream from "./createErrorStream"
-import validatedValue from "./createValidatedValueStream"
 
+const getValueProp = F.prop("value")
 const getErrorProp = F.prop("error")
 
 const toIndexedStream = $ => (
@@ -18,6 +18,12 @@ const toIndexedStream = $ => (
     { idx: 0 }
   )
   .changes()
+)
+
+// Observable<{ value, error? }> -> [ Observable<value>, Observable<value> ]
+const splitByValidity = F.flow(
+  S.partition(F.flow(getErrorProp, CONFIG.isNotValidationError)),
+  F.map(F.map(getValueProp))
 )
 
 // ---
@@ -51,20 +57,14 @@ export default (state$, validate$) => ([ input$, reducer, validator ]) => {
   )
 
   return [
-    // state updates:
-    [
-      [
-        validatedValue(true, validatedInput$),
-        reducer,
-      ],
-      // If value is invalid, reducer for it should not be executed (cause it can lead to errors),
-      // but new value itself still should be somehow saved in state
-      // (important for React's controlled inputs, for example)
-      [
-        validatedValue(false, validatedInput$),
-        validator.opts.set,
-      ],
-    ],
+    // state updates
+    // If input value is invalid, reducer for it should not be executed (cause it can lead to errors),
+    // but still should be a possibility to save in state new value itself.
+    // It can be important for controlled inputs in React, for example.
+    F.zip(
+      splitByValidity(validatedInput$),
+      [ reducer, validator.opts.set ]
+    ),
 
     // validation of particular input when it changes:
     [
