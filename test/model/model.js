@@ -19,16 +19,16 @@ describe("model :: base", () => {
 
     const data = spy.lastCall.args[0]
 
-    assert.property(data, "state")
-    assert.deepEqual(data.state, { value: "initial value" })
+    assert.property(data, "state", "Stream data has no 'state' property")
+    assert.deepEqual(data.state, { value: "initial value" }, "State is wrong")
 
-    assert.deepProperty(data, "handlers.setValue")
-    assert.isFunction(data.handlers.setValue)
+    assert.deepProperty(data, "handlers.setValue", "Stream data has no handlers")
+    assert.isFunction(data.handlers.setValue, "Named handler is not created")
   }
 
   describe("asStream", () => {
     it("should be an Observable<{ state, handlers }>", () => {
-      assert.isFunction(Model.asStream)
+      assert.isFunction(Model.asStream, "Model.asStream method does not exist")
 
       const model = Model.asStream(
         [ [ "setValue", "value" ] ],
@@ -41,7 +41,7 @@ describe("model :: base", () => {
 
   describe("toStream", () => {
     it("should convert model object into Observable", () => {
-      assert.isFunction(Model.toStream)
+      assert.isFunction(Model.toStream, "Model.toStream method does not exist")
 
       const model = Model.toStream(Model(
         [ [ "setValue", "value" ] ],
