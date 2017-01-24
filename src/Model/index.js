@@ -11,6 +11,12 @@ class Model extends Stream {
     return Parser
   }
 
+  /**
+   * @param {Array<Observable<*>, Observable.<Function>>} fields
+   * @param {Object.<String, Function>}} handlers
+   * @return {{stream: Observable.<*>, handlers: Object.<String, Function>}}
+   * @private
+   */
   _build({ fields, handlers }) {
     return {
       stream: super._build(fields),

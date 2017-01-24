@@ -8,7 +8,7 @@ import Parser from "./Parser"
 
 class Stream {
   constructor(config, initialState = CONFIG.getEmptyObject()) {
-    this._createInputStream = F.curry(this._createInputStream).bind(this)
+    this._createInputStream = this._createInputStream.bind(this)
     this._createStreams = this._createStreams.bind(this)
 
     this._init(this._initInitialState(initialState))
@@ -19,6 +19,10 @@ class Stream {
     return Parser
   }
 
+  /**
+   * @param {Observable.<*>} initialState$
+   * @protected
+   */
   _init(initialState$) {
     const pool$ = Kefir.pool()
     const state$ = pool$.merge(initialState$)
@@ -28,20 +32,43 @@ class Stream {
     this.pool$ = pool$
   }
 
+  /**
+   * @param {*} x
+   * @return {Observable}
+   * @protected
+   */
   _initInitialState(x) {
     return F.isStream(x) ? x.take(1).toProperty() : S.of(x)
   }
 
+  /**
+   * @param {Observable.<*>} state$
+   * @param {Observable.<*>} input$
+   * @param {Observable.<Function>} reducer$
+   * @returns {Observable.<*>}
+   * @protected
+   */
   _createInputStream(state$, [ input$, reducer$ ]) {
     return S.withTransform(reducer$, state$.sampledBy(input$, Array.of))
   }
 
+  /**
+   * @param {Observable.<*>} state$
+   * @param {Array.<Observable.<*>, Observable.<Function>>} fields
+   * @return {Array.<Observable.<*>>}
+   * @protected
+   */
   _createStreams(state$, fields) {
     const { _createInputStream } = this
 
-    return fields.map(_createInputStream(state$))
+    return fields.map(x => _createInputStream(state$, x))
   }
 
+  /**
+   * @param {Array.<Observable.<*>, Observable.<Function>>} fields
+   * @return {Observable.<*>}
+   * @protected
+   */
   _build(fields) {
     const { _createStreams, state$, pool$ } = this
 
