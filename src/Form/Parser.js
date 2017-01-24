@@ -115,21 +115,12 @@ function parseValidator(x, opts) {
 
 // ---
 
-// just for better readability in further code
-const fieldToDict = (
-  ([ input$, reducer$, validator ]) => ({
-    input$, reducer$, validator
-  })
-)
-
-// ---
-
 export default class FormParser extends ModelParser {
 
   parse(...args) {
     const { fields, handlers, } = super.parse(...args)
     return {
-      fields: fields.map(fieldToDict),
+      fields,
       handlers: ensureHandlersValid(handlers),
     }
   }

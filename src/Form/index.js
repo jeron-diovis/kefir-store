@@ -67,7 +67,7 @@ export default function Form(
 
       createFullValidationField(
         state$.sampledBy($validate.stream),
-        F.pluck("validator", cfg.fields)
+        F.pluck(2, cfg.fields)
       ),
 
       [ $reset.stream, CONFIG.getEmptyObject ],

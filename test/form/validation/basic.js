@@ -41,17 +41,17 @@ describe("form :: validation:", () => {
       form.handlers.setValue(0)
       form.handlers.setValue(1)
 
-      assert.equal(spy.callCount, 2)
+      assert.equal(spy.callCount, 2, "Form isn't updated twice")
 
       const args = x => spy.getCall(x).args[0]
 
-      assert.deepEqual(args(0).state, { value: 0 })
-      assert.deepEqual(args(0).errors, { value: ERROR_MSG })
-      assert.isFalse(args(0).status.isValid)
+      assert.deepEqual(args(0).state, { value: 0 }, "Set invalid value: State is wrong")
+      assert.deepEqual(args(0).errors, { value: ERROR_MSG }, "Set invalid value: Errors are wrong")
+      assert.isFalse(args(0).status.isValid, "Set invalid value: 'isValid' status is wrong")
 
-      assert.deepEqual(args(1).state, { value: 1 })
-      assert.deepEqual(args(1).errors, { value: null })
-      assert.isTrue(args(1).status.isValid)
+      assert.deepEqual(args(1).state, { value: 1 }, "Set valid value: State is wrong")
+      assert.deepEqual(args(1).errors, { value: null }, "Set valid value: Errors are wrong")
+      assert.isTrue(args(1).status.isValid, "Set valid value: 'isValid' status is wrong")
     })
 
     it("for non-validated inputs", () => {
@@ -69,9 +69,9 @@ describe("form :: validation:", () => {
 
       const args = x => spy.getCall(x).args[0]
 
-      assert.deepEqual(args(0).state, { value: 0 })
-      assert.deepEqual(args(0).errors, {})
-      assert.isTrue(args(0).status.isValid)
+      assert.deepEqual(args(0).state, { value: 0 }, "State is wrong")
+      assert.deepEqual(args(0).errors, {}, "Errors are wrong")
+      assert.isTrue(args(0).status.isValid, "'isValid' status is wrong")
     })
   })
 
