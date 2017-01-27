@@ -1,6 +1,7 @@
 var sysPath = require("path")
 var root = __dirname
 var srcRoot = sysPath.join(root, "src")
+var fs = require("fs")
 
 var webpack = require("webpack")
 var WebpackErrorNotificationPlugin = require("webpack-error-notification")
@@ -14,8 +15,8 @@ module.exports = {
 
   output: {
     path: sysPath.join(root, "dist"),
-    filename: "index.js",
-    library: "MyPackage",
+    filename: "kefir-store" + (isProd ? ".min" : "") + ".js",
+    library: "KefirStore",
     libraryTarget: "umd",
   },
 
@@ -27,6 +28,16 @@ module.exports = {
     failOnError: true,
     failOnWarning: true,
   },
+
+  externals: (
+    Object.keys(
+      JSON.parse(
+        fs.readFileSync("package.json")
+      ).dependencies
+    ).concat(
+      /^lodash($|\/.+)/
+    )
+  ),
 
   module: {
     preLoaders: [
@@ -64,5 +75,5 @@ module.exports = {
     ]
   ),
 
-  devtool: isProd ? false : "#inline-source-map",
+  devtool: false,
 }
