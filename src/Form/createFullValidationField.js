@@ -1,8 +1,10 @@
 import Kefir from "kefir"
 import * as F from "../lib/func_utils"
+import { toReducer } from "../lib/stream_utils"
 
 const setError = (state, [ setter, error ]) => setter(state, error)
-const reducer = (state, list) => list.reduce(setError, state)
+const errorsReducer = toReducer((state, list) => list.reduce(setError, state))
+const noopReducer = toReducer(F.id)
 
 const applyValidator = F.curry((state$, validator) =>
   validator.ap(state$.map(x => [ validator.getFromState(x), x ])))
@@ -12,7 +14,7 @@ export default (state$, validators) => {
   // it still should emit it's current state
   // in response on `validate` call
   if (validators.length === 0) {
-    return [ state$, F.id ]
+    return [ state$, noopReducer ]
   }
 
   // A row emitting an atomic update
@@ -20,9 +22,9 @@ export default (state$, validators) => {
   return [
     Kefir
       .zip(validators.map(applyValidator(state$)))
-      // Array<Function> -> Array<*> -> Array<Array<Function, *>>
+      // Array.<Function> -> Array.<*> -> Array.<Array.<Function, *>>
       .map(F.zip.bind(null, F.pluck("setError", validators))),
 
-    reducer,
+    errorsReducer,
   ]
 }

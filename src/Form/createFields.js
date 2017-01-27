@@ -24,12 +24,9 @@ const splitByValidity = F.flow(
   F.map(F.map(getValueProp))
 )
 
-// TODO: this probably should be done directly in validator parser
-const toReducer = F.branch(F.isFunction, F.compose(S.of, F.map, F.spread))
-
 // ---
 
-export const createFields = F.curry((state$, [ input$, reducer$, validator ]) => {
+export const createFields = F.curry((state$, { input$, reducer$, validator }) => {
   // Each input value is validated.
   // Each value should be emitted synchronously with validation result for it.
   // But validator can be async.
@@ -52,13 +49,13 @@ export const createFields = F.curry((state$, [ input$, reducer$, validator ]) =>
     // It can be important for controlled inputs in React, for example.
     F.zip(
       splitByValidity(validated$),
-      [ reducer$, toReducer(validator.setInvalid) ]
+      [ reducer$, S.toReducer(validator.setInvalid) ]
     ),
 
     // validation of particular input when it changes:
     [
       validated$.map(getErrorProp),
-      toReducer(validator.setError),
+      S.toReducer(validator.setError),
     ],
   ]
 })

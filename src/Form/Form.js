@@ -25,6 +25,20 @@ const errorsToValidity = F.flow(
   xs => xs.every(CONFIG.isNotValidationError)
 )
 
+const zipForm = (state$, errors$, status$) => (
+  Kefir.zip(
+    [
+      state$,
+      errors$,
+      status$.sampledBy(
+        errors$.map(errorsToValidity),
+        CONFIG.defaultSetter("isValid")
+      ),
+    ],
+    (state, errors, status) => ({ state, errors, status })
+  )
+)
+
 // ---
 
 class Form extends Model {
@@ -64,6 +78,28 @@ class Form extends Model {
     ]
   }
 
+  _createFullValidationStream(current, fields) {
+    const { stream: validate$ } = this.$validate
+
+    const state$ = current.state$.sampledBy(validate$)
+
+    const errors$ = (
+      super._createInputStream(
+        current.errors$,
+        createFullValidationField(
+          state$,
+          F.pluck("validator", fields)
+        )
+      )
+    )
+
+    const status$ = current.status$.map(
+      F.update("isValidated", F.constant(true))
+    )
+
+    return zipForm(state$, errors$, status$)
+  }
+
   _createStreams(current$, fields) {
     const parts = {
       state$: current$.map(F.prop("state")),
@@ -72,25 +108,23 @@ class Form extends Model {
     }
 
     const [ stateStreams = [], errorStreams = [] ] = F.zip(...super._createStreams(parts, fields))
-    const state$ = Kefir.merge(stateStreams)
-    const errors$ = Kefir.merge(errorStreams)
-    const status$ = parts.status$.sampledBy(
-      errors$.map(errorsToValidity),
-      CONFIG.defaultSetter("isValid")
-    )
-
-    const output$ = Kefir.zip(
-      [ state$, errors$, status$ ],
-      (state, errors, status) => ({ state, errors, status })
-    )
 
     return [
-      output$
-        .merge(
-          this.initialState$
-            .map(F.update("status.isResetted", F.constant(true)))
-            .sampledBy(this.$reset.stream),
-        )
+      zipForm(
+        Kefir.merge(stateStreams),
+        Kefir.merge(errorStreams),
+
+        parts.status$.map(F.flow(
+          F.update("isResetted", F.constant(false)),
+          F.update("isValidated", F.constant(false))
+        ))
+      ),
+
+      this.initialState$
+        .map(F.update("status.isResetted", F.constant(true)))
+        .sampledBy(this.$reset.stream),
+
+      this._createFullValidationStream(parts, fields),
     ]
   }
 

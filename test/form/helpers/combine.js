@@ -93,13 +93,13 @@ describe("form :: helpers :: combine:", () => {
 
     validate()
 
-    assert.equal(spy.callCount, 1, "Combined form emits multiple times on validation")
+    assert.equal(spy.callCount, 1, "Combined form does not emit once on validation")
     assert.equal(spy.getCall(0).args[0].status.isValid, true, "'isValid' status is wrong")
     assert.equal(spy.getCall(0).args[0].status.isValidated, true, "'isValidated' status is wrong")
 
     reset()
 
-    assert.equal(spy.callCount, 2, "Combined form emits multiple times on resetting")
+    assert.equal(spy.callCount, 2, "Combined form does not emit once on resetting")
     assert.equal(spy.getCall(1).args[0].status.isValid, undefined, "'isValid' status is wrong")
     assert.equal(spy.getCall(1).args[0].status.isValidated, false, "'isValidated' status is wrong")
     assert.equal(spy.getCall(1).args[0].status.isResetted, true, "'isResetted' status is wrong")

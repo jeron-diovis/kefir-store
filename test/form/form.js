@@ -149,7 +149,7 @@ describe("form :: base:", () => {
       form.handlers.setValue(1)
 
       assert.equal(reducer.callCount, 1, "Reducer isn't called once")
-      assert.deepEqual(reducer.getCall(0).args[1], 1)
+      assert.equal(reducer.getCall(0).args[1], 1, "Reducer is called with wrong value")
       assert.deepEqual(reducer.getCall(0).args[0], {}, "Form state is not empty after reset")
 
       assert.equal(spy.callCount, 3, "Spy isn't called 3 times")
@@ -173,6 +173,8 @@ describe("form :: base:", () => {
           isResetted: true,
         },
       }, "Form is wrong after resetting")
+
+      assert.isFalse(spy.getCall(2).args[0].status.isResetted, "'isResetted' isn't false after regular store update")
     })
   })
 })

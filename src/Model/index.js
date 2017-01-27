@@ -13,7 +13,7 @@ class Model extends Stream {
 
   /**
    * @param {Array<Observable<*>, Observable.<Function>>} fields
-   * @param {Object.<String, Function>}} handlers
+   * @param {Object.<String, Function>} handlers
    * @return {{stream: Observable.<*>, handlers: Object.<String, Function>}}
    * @private
    */

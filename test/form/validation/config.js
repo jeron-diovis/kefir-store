@@ -172,8 +172,8 @@ describe("form :: validation :: validator config:", () => {
         form.handlers.setValue(0)
         form.handlers.validate()
 
-        assert.equal(spy.callCount, 2)
-        assert.equal(validator.callCount, 2)
+        assert.equal(spy.callCount, 2, "Form isn't updated twice")
+        assert.equal(validator.callCount, 2, "Validator isn't called twice")
 
         assert.deepEqual(spy.getCall(0).args[0].state, { value: 0 })
         assert.deepEqual(spy.getCall(0).args[0].errors, { value: ERROR_MSG })

@@ -6,7 +6,7 @@ import CONFIG from "../config"
 
 // ---
 
-// Observable<validator_func> -> Observable<value> -> Observable<validation_result>
+// Observable.<F> -> Observable.<x> -> Observable.<F(x)>
 const toErrorStream = F.flow(
   S.withTransform,
   F.compose.bind(null,
@@ -39,7 +39,7 @@ function ensureHandlersValid(handlers) {
 /**
  * @param {Array|Function|Observable<Function>} x
  * @param {undefined|{ set: Function, get: Function, key: String }} opts
- * @return {undefined|{ ap: Function, opts: Object }}
+ * @return {{ ap: Function, opts: Object }}
  */
 function parseValidator(x, opts) {
   if (x === undefined) {
@@ -73,9 +73,7 @@ function parseValidator(x, opts) {
 
   // ---
 
-  if (F.isFunction(validator)) {
-    validator = S.of(F.map(F.spread(validator)))
-  }
+  validator = S.toReducer(validator)
 
   if (!F.isStream(validator)) {
     throw new Error(`[kefir-store :: form] Validation config.
@@ -115,12 +113,21 @@ function parseValidator(x, opts) {
 
 // ---
 
+// just for better readability in further code
+const fieldToDict = (
+  ([ input$, reducer$, validator ]) => ({
+    input$, reducer$, validator
+  })
+)
+
+// ---
+
 export default class FormParser extends ModelParser {
 
   parse(...args) {
-    const { fields, handlers, } = super.parse(...args)
+    const { fields, handlers } = super.parse(...args)
     return {
-      fields,
+      fields: fields.map(fieldToDict),
       handlers: ensureHandlersValid(handlers),
     }
   }

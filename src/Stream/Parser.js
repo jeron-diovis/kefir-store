@@ -1,8 +1,8 @@
-import Kefir from "kefir"
 import * as F from "../lib/func_utils"
+import { toReducer } from "../lib/stream_utils"
 import CONFIG from "../config"
 
-const isNotEmptyList = x => x.length > 0
+const hasItems = x => x.length > 0
 
 export default class StreamParser {
   constructor() {
@@ -10,7 +10,7 @@ export default class StreamParser {
   }
 
   parse(config = []) {
-    return config.filter(isNotEmptyList).map(this.parseField)
+    return config.filter(hasItems).map(this.parseField)
   }
 
   parseField([ input, reducer ]) {
@@ -33,18 +33,16 @@ export default class StreamParser {
       x = CONFIG.defaultSetter(x)
     }
 
-    if (F.isFunction(x)) {
-      return Kefir.constant(F.map(F.spread(x)))
+    x = toReducer(x)
+
+    if (!F.isStream(x)) {
+      throw new Error(`[kefir-store] Invalid reducer
+        Must be either string, or (state, patch) -> newState,
+        or Observable.<(Observable.<Array.<state, patch>> -> Observable.<new_state>)>
+      `)
     }
 
-    if (F.isStream(x)) {
-      return x
-    }
-
-    throw new Error(`[kefir-store] Invalid reducer
-      Must be either string, or function(state, patch) -> newState,
-      or Observable<function(Observable<[state, patch]>) -> Observable<newState>>
-    `)
+    return x
   }
 }
 
