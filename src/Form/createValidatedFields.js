@@ -2,8 +2,12 @@ import * as F from "../lib/func_utils"
 import * as S from "../lib/stream_utils"
 import CONFIG from "../config"
 
+// ---
+
 const getValueProp = F.prop("value")
 const getErrorProp = F.prop("error")
+
+// ---
 
 const indexed = $ => (
   $.scan(
@@ -18,15 +22,24 @@ const indexed = $ => (
   .changes()
 )
 
+// ---
+
+const negate = fn => (...args) => !fn(...args)
+
+const partition = F.curry((predicate, $) => [
+  $.filter(predicate),
+  $.filter(negate(predicate))
+])
+
 // Observable.<{ value, error? }> -> [ Observable.<value>, Observable.<value> ]
 const splitByValidity = F.flow(
-  F.partition(F.flow(getErrorProp, CONFIG.isNotValidationError)),
+  partition(F.flow(getErrorProp, CONFIG.isNotValidationError)),
   F.map(F.map(getValueProp))
 )
 
 // ---
 
-export const createFields = F.curry((state$, { input$, reducer$, validator }) => {
+export default F.curry((state$, { input$, reducer$, validator }) => {
   // Each input value is validated.
   // Each value should be emitted synchronously with validation result for it.
   // But validator can be async.
@@ -59,21 +72,3 @@ export const createFields = F.curry((state$, { input$, reducer$, validator }) =>
     ],
   ]
 })
-
-/**
- * TODO: remove this
- * @param {Observable} state$
- * @param {Array} config
- * @return {{state, errors}}
- */
-export default (state$, config) => {
-  const [
-    stateFieldPairs = [],
-    errorFields = [],
-  ] = F.zip(...config.map(createFields(state$)))
-
-  return {
-    state: F.flatten(stateFieldPairs),
-    errors: errorFields,
-  }
-}

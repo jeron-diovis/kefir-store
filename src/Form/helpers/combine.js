@@ -42,7 +42,7 @@ export default function combineForms(cfg) {
   const [ keys, forms ] = F.zip(...F.entries(cfg))
   const combo$ = Kefir.combine(forms.map(toStream)).toProperty()
 
-  const $flag = Subject($ => $.map(F.constant(false)).toProperty(F.constant(true)))
+  const $flag = Subject($ => $.map(F.returnFalse).toProperty(F.returnTrue))
 
   const combinedHandlers$ = combo$.take(1).map(F.pluck("handlers")).map(handlers =>
     SPECIAL_HANDLERS.reduce(
@@ -95,7 +95,7 @@ export default function combineForms(cfg) {
     forms$
       .filterBy($flag.stream.merge(
         // when all forms has emitted value, unlock main stream
-        aggregated$.map(F.constant(true)))
+        aggregated$.map(F.returnTrue))
       )
       .map(x => {
         SPECIAL_STATUSES.forEach(key => {

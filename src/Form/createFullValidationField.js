@@ -17,8 +17,8 @@ export default (state$, validators) => {
     return [ state$, noopReducer ]
   }
 
-  // A row emitting an atomic update
-  // with results of all available validators
+  // A field emitting an atomic update
+  // with merged results of all available validators
   return [
     Kefir
       .zip(validators.map(applyValidator(state$)))

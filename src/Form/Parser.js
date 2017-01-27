@@ -18,8 +18,8 @@ const toErrorStream = F.flow(
 )
 
 const createValidatorOptionsFromProp = prop => ({
-  get: CONFIG.defaultGetter(prop),
-  set: CONFIG.defaultSetter(prop),
+  get: CONFIG.getter(prop),
+  set: CONFIG.reducer(prop),
   key: prop,
 })
 
@@ -107,13 +107,13 @@ function parseValidator(x, opts) {
     ap: toErrorStream(validator),
     getFromState: opts.get,
     setInvalid: opts.set,
-    setError: CONFIG.defaultSetter(opts.key),
+    setError: CONFIG.reducer(opts.key),
   }
 }
 
 // ---
 
-// just for better readability in further code
+// only and only for better readability in further code
 const fieldToDict = (
   ([ input$, reducer$, validator ]) => ({
     input$, reducer$, validator

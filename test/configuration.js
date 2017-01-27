@@ -5,8 +5,8 @@ import defaultConfig from "../src/config/default"
 
 const immutableConfig = {
   getEmptyObject: () => Immutable.OrderedMap(),
-  defaultSetter: prop => (state, value) => state.setIn(prop.split("."), value),
-  defaultGetter: prop => state => state.get(prop),
+  reducer: prop => (state, value) => state.setIn(prop.split("."), value),
+  getter: prop => state => state.get(prop),
 }
 
 describe("configuration", () => {

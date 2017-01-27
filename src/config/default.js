@@ -1,9 +1,9 @@
 export default {
   getEmptyObject: () => ({}),
-  isEmptyObject: obj => Object.keys(obj).length === 0,
-  defaultGetter: prop => state => state[prop],
-  defaultSetter: prop => (state, value) => Object.assign({}, state, { [prop]: value }),
   getValuesList: obj => Object.keys(obj).map(key => obj[key]),
+
+  getter: prop => state => state[prop],
+  reducer: prop => (state, value) => Object.assign({}, state, { [prop]: value }),
 
   isNotValidationError: x => x == null,
 }

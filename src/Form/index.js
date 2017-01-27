@@ -1,130 +1,156 @@
 import Kefir from "kefir"
+import CONFIG from "../config"
 
 import Parser from "./Parser"
-import Stream from "../Stream"
+import { Class as Model } from "../Model"
 
 import Subject from "../lib/Subject"
 
 import * as F from "../lib/func_utils"
-import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
 
-import CONFIG from "../config"
-
-import createFields from "./createFields"
+import createValidatedFields from "./createValidatedFields"
 import createFullValidationField from "./createFullValidationField"
 
 // ---
 
-const initStatusStream = (input$, form$) => (
-  // activate manually, so in this stream values
-  // are guaranteed to appear before form$
-  input$
-    .changes().onAny(() => {})
-    .bufferBy(form$).map(F.isNotEmptyList)
-    .toProperty(F.constant(false))
+const resetMetaStatuses = F.flow(
+  F.update("isResetted", F.returnFalse),
+  F.update("isValidated", F.returnFalse)
 )
 
-const id2 = (_, x) => x
+// Object -> Bool
+const errorsToValidity = F.flow(
+  CONFIG.getValuesList,
+  xs => xs.every(CONFIG.isNotValidationError)
+)
+
+const zipFormParts = (state$, errors$, status$) => (
+  Kefir.zip(
+    [
+      state$,
+      errors$,
+      status$.sampledBy(
+        errors$.map(errorsToValidity),
+        CONFIG.reducer("isValid")
+      ),
+    ],
+    (state, errors, status) => ({ state, errors, status })
+  )
+)
 
 // ---
 
-export default function Form(
-  config = [],
-  initialState = CONFIG.getEmptyObject()
-) {
-  const $validate = Subject()
-  const $reset = Subject()
+class Form extends Model {
 
-  const pool$ = Kefir.pool()
-  const state$ = S.withInitialState(pool$, initialState)
+  _getParser() {
+    return Parser
+  }
 
-  // ---
+  _initInitialState(...args) {
+    return super._initInitialState(...args).map(state => ({
+      state,
+      errors: CONFIG.getEmptyObject(),
+      status: {
+        // Initially form is neither valid nor invalid.
+        // It *isn't validated at all*.
+        isValid: undefined,
+        isValidated: false,
+        isResetted: false,
+      },
+    }))
+  }
 
-  const cfg = Parser.parse(config)
-  const fields = createFields(state$, cfg.fields)
+  _init(...args) {
+    this.$validate = Subject()
+    this.$reset = Subject()
 
-  // ---
+    super._init(...args)
+  }
 
-  pool$.plug(Stream(
-    [ ...fields.state,
+  _createInputStream(current, cfg) {
+    const [ inputFields, errorField ] = createValidatedFields(current.state$, cfg)
 
-      [
-        $reset.stream.flatMap(F.constant(S.ensure(initialState))),
-        id2
-      ]
-    ],
+    return [
+      Kefir.merge(inputFields.map(
+        x => super._createInputStream(current.state$, x)
+      )),
 
-    initialState
-  ))
+      super._createInputStream(current.errors$, errorField),
+    ]
+  }
 
-  // ---
+  _createMainStream(current, fields) {
+    const [ stateStreams = [], errorStreams = [] ] = F.zip(...super._createStreams(current, fields))
 
-  // Note that errors aren't mapped from state, it's a completely separate stream.
-  // Because incoming values are validated, not entire state.
-  const errors$ = Stream(
-    [ ...fields.errors,
+    return zipFormParts(
+      Kefir.merge(stateStreams),
+      Kefir.merge(errorStreams),
+      current.status$.map(resetMetaStatuses)
+    )
+  }
 
-      createFullValidationField(
-        state$.sampledBy($validate.stream),
-        F.pluck("validator", cfg.fields)
-      ),
+  _createFullValidationStream(current, fields) {
+    const state$ = current.state$.sampledBy(this.$validate.stream)
 
-      [ $reset.stream, CONFIG.getEmptyObject ],
-    ],
+    const errors$ = (
+      super._createInputStream(
+        current.errors$,
+        createFullValidationField(
+          state$,
+          F.pluck("validator", fields)
+        )
+      )
+    )
 
-    CONFIG.getEmptyObject()
-  )
+    const status$ = current.status$.map(
+      F.update("isValidated", F.returnTrue)
+    )
 
-  const form$ = Kefir.zip(
-    [ // Validation does not update state (which is reasonable),
-      // but to keep state and errors in sync, need to emulate such update
-      S.withSampler(state$, $validate.stream),
-      errors$,
-    ],
-    (state, errors) => ({ state, errors })
-  ).toProperty()
+    return zipFormParts(state$, errors$, status$)
+  }
 
-  // ---
+  _createStreams(current$, fields) {
+    const parts = {
+      state$: current$.map(F.prop("state")),
+      errors$: current$.map(F.prop("errors")),
+      status$: current$.map(F.prop("status")),
+    }
 
-  const isValidated$ = initStatusStream($validate.stream, form$)
-  const isResetted$ = initStatusStream($reset.stream, form$)
-  const isValid$ = errors$
-    // Until some interaction happens (any field updated or form validated),
-    // form is neither valid nor invalid – it's not validated at all, so "isValid" is undefined.
-    .changes()
-    .map(errors => CONFIG.getValuesList(errors).every(CONFIG.isNotValidationError))
-    .toProperty(F.constant(undefined))
-    // Reset also returns status to initial undefined state
-    .zip(isResetted$, (isValid, isResetted) => isResetted ? undefined : isValid)
+    return [
+      this._createMainStream(parts, fields),
 
-  const status$ = Kefir.zip(
-    [ isValidated$, isResetted$, isValid$ ],
-    (isValidated, isResetted, isValid) => ({ isValidated, isResetted, isValid })
-  )
+      this._createFullValidationStream(parts, fields),
 
-  // ---
+      this.initialState$
+        .map(F.update("status.isResetted", F.constant(true)))
+        .sampledBy(this.$reset.stream),
+    ]
+  }
 
-  return {
-    stream: (
-      Kefir.zip(
-        [ form$, status$ ],
-        (form, status) => Object.assign(form, { status })
-      ).toProperty()
-    ),
+  _build(...args) {
+    const { stream, handlers } = super._build(...args)
 
-    handlers: {
-      ...cfg.handlers,
-      reset: $reset.handler,
-      validate: $validate.handler,
-    },
+    return {
+      stream,
+
+      handlers: Object.assign(handlers, {
+        validate: this.$validate.handler,
+        reset: this.$reset.handler,
+      }),
+    }
   }
 }
 
 // ---
 
-Form.toStream = helpers.toStream
-Form.asStream = F.flow(Form, Form.toStream)
 
-Form.validatedOn = helpers.validatedOn
-Form.combine = helpers.combine
+const of = Form.of.bind(Form)
+
+Object.assign(of, helpers)
+of.asStream = F.flow(of, of.toStream)
+
+// ---
+
+export const Class = Form
+export default of

@@ -4,7 +4,7 @@ import StreamParser from "../Stream/Parser"
 
 // ---
 
-const EMPTY_KEY = Object.create(null)
+const NONAME = Object.create(null)
 const noop = () => {}
 
 const handlersReducer = (handlers, { name, subject: { handler } }) => {
@@ -25,7 +25,7 @@ const parseKey = x => {
     return x
   }
 
-  if (x === EMPTY_KEY) {
+  if (x === NONAME) {
     return x
   }
 
@@ -62,7 +62,7 @@ export default class ModelParser extends StreamParser {
 
   parseInput(x) {
     if (F.isStream(x)) {
-      return { name: EMPTY_KEY, subject: { stream: x, handler: noop } }
+      return { name: NONAME, subject: { stream: x, handler: noop } }
     }
 
     if (F.isString(x)) {
@@ -84,10 +84,8 @@ export default class ModelParser extends StreamParser {
     const [ inputs = [], reducers = [], ...rest ] = F.zip(...super.parse(...args))
     return {
       fields: F.zip(pluckStreams(inputs), reducers, ...rest),
-      handlers: inputs.filter(({ name }) => name !== EMPTY_KEY).reduce(handlersReducer, {}),
+      handlers: inputs.filter(({ name }) => name !== NONAME).reduce(handlersReducer, {}),
     }
   }
 
 }
-
-ModelParser.EMPTY_KEY = EMPTY_KEY

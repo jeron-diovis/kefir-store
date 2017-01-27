@@ -30,7 +30,7 @@ export default class StreamParser {
 
   parseReducer(x) {
     if (F.isString(x)) {
-      x = CONFIG.defaultSetter(x)
+      x = CONFIG.reducer(x)
     }
 
     x = toReducer(x)
