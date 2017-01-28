@@ -8,9 +8,6 @@ import Parser from "./Parser"
 
 class Stream {
   constructor(config, initialState = CONFIG.getEmptyObject()) {
-    this._createInputStream = this._createInputStream.bind(this)
-    this._createStreams = this._createStreams.bind(this)
-
     this._init(this._initInitialState(initialState))
     return this._build(this._getParser().parse(config))
   }
@@ -59,9 +56,7 @@ class Stream {
    * @protected
    */
   _createStreams(state$, fields) {
-    const { _createInputStream } = this
-
-    return fields.map(x => _createInputStream(state$, x))
+    return fields.map(x => this._createInputStream(state$, x))
   }
 
   /**
@@ -70,9 +65,9 @@ class Stream {
    * @protected
    */
   _build(fields) {
-    const { _createStreams, state$, pool$ } = this
+    const { state$, pool$ } = this
 
-    pool$.plug(Kefir.merge(_createStreams(state$, fields)))
+    pool$.plug(Kefir.merge(this._createStreams(state$, fields)))
     return state$.toProperty()
   }
 }

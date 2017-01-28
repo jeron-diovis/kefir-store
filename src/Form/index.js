@@ -123,7 +123,7 @@ class Form extends Model {
       this._createFullValidationStream(parts, fields),
 
       this.initialState$
-        .map(F.update("status.isResetted", F.constant(true)))
+        .map(F.update("status.isResetted", F.returnTrue))
         .sampledBy(this.$reset.stream),
     ]
   }
