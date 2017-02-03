@@ -1,9 +1,7 @@
-import { flow, curry } from "../../lib/func_utils"
+import { prop, flow, curry } from "../../lib/func_utils"
 import { ap } from "../../lib/stream_utils"
 import toStream from "./toStream"
-import CONFIG from "../../config"
 
-const prop = CONFIG.getter
 const getIsValid = flow(prop("status"), prop("isValid"))
 const getValidator = flow(prop("handlers"), prop("validate"))
 const getState = prop("state")
