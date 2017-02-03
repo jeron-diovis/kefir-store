@@ -19,19 +19,15 @@ const resetMetaStatuses = F.flow(
   F.update("isValidated", F.returnFalse)
 )
 
-// Object -> Bool
-const errorsToValidity = F.flow(
-  CONFIG.getValuesList,
-  xs => xs.every(CONFIG.isNotValidationError)
-)
-
 const zipFormParts = (state$, errors$, status$) => (
   Kefir.zip(
     [
       state$,
       errors$,
       status$.sampledBy(
-        errors$.map(errorsToValidity),
+        errors$
+          .map(CONFIG.getValuesList)
+          .map(xs => xs.every(CONFIG.isNotValidationError)),
         CONFIG.reducer("isValid")
       ),
     ],
