@@ -1,6 +1,6 @@
 import { Stream } from "../src"
 
-describe("basic stream", () => {
+describe("basic stream:", () => {
   it("should create a property stream with empty object by default", () => {
     const store = Stream()
     const spy = sinon.spy()
@@ -20,7 +20,7 @@ describe("basic stream", () => {
 
 
 
-  describe("reducers", () => {
+  describe("reducers:", () => {
     it("as function: should update state in custom way", () => {
       const subject = Subject()
       const store = Stream([
