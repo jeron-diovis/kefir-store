@@ -40,6 +40,84 @@ describe("collection reducer:", () => {
     );
   })
 
+  it("should pass entire state as 3-rd argument to reducer", () => {
+    const subject = Subject()
+
+    const reducer = sinon.spy();
+
+    const STATE = [
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+    ]
+
+    const store = Stream(
+      [
+        [ subject.stream, listReducer(reducer) ]
+      ],
+      STATE
+    )
+
+    const spy = sinon.spy()
+    store.changes().onValue(spy)
+
+    const PAYLOAD = "payload"
+
+    subject.handler({
+      query: null,
+      data: PAYLOAD,
+    })
+
+    // ---
+
+    STATE.forEach((x, i) => {
+      assert.deepEqual(
+        reducer.getCall(i).args,
+        [ x, PAYLOAD, STATE ],
+        "reducer does not receive proper args"
+      )
+    })
+  })
+
+  it("should pass item, state and item index to filterer", () => {
+    const subject = Subject()
+
+    const filterer = sinon.spy();
+
+    const STATE = [
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+    ]
+
+    const store = Stream(
+      [
+        [ subject.stream, listReducer(() => {}) ]
+      ],
+      STATE
+    )
+
+    const spy = sinon.spy()
+    store.changes().onValue(spy)
+
+    const PAYLOAD = "payload"
+
+    subject.handler({
+      query: filterer,
+      data: PAYLOAD,
+    })
+
+    // ---
+
+    STATE.forEach((x, i) => {
+      assert.deepEqual(
+        filterer.getCall(i).args,
+        [ x, STATE, i ],
+        "filterer does not receive proper args"
+      )
+    })
+  })
+
   it("should apply logic of reducer to each item in collection", () => {
     const subject = Subject()
 
@@ -58,12 +136,8 @@ describe("collection reducer:", () => {
 
     const store = Stream(
       [
-        [
-          subject.stream,
-          listReducer(reducer),
-        ]
+        [ subject.stream, listReducer(reducer) ]
       ],
-
       STATE
     )
 
@@ -78,42 +152,8 @@ describe("collection reducer:", () => {
     // ---
 
     assert.equal(spy.callCount, 1, "state is not updated once")
-    assert.equal(reducer.callCount, 2, "reducer is not called twice")
-    assert.equal(filterer.callCount, 3, "filterer is not called 3 times")
-
-    // ---
-
-    assert.deepEqual(
-      reducer.getCall(0).args,
-      [ { value: 1 }, 2, STATE ],
-      "reducer does not receive proper args"
-    )
-
-    assert.deepEqual(
-      reducer.getCall(1).args,
-      [ { value: 3 }, 2, STATE ],
-      "reducer does not receive proper args"
-    )
-
-    // ---
-
-    assert.deepEqual(
-      filterer.getCall(0).args,
-      [ { value: 1 }, STATE, 0 ],
-      "filterer does not receive proper args"
-    )
-
-    assert.deepEqual(
-      filterer.getCall(1).args,
-      [ { value: 2 }, STATE, 1 ],
-      "filterer does not receive proper args"
-    )
-
-    assert.deepEqual(
-      filterer.getCall(2).args,
-      [ { value: 3 }, STATE, 2 ],
-      "filterer does not receive proper args"
-    )
+    assert.equal(reducer.callCount, 2, "reducer is not called for each matching item")
+    assert.equal(filterer.callCount, 3, "filterer is not called for each item")
 
     // ---
 
