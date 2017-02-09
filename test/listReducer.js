@@ -1,23 +1,23 @@
-import { Stream, collectionReducer } from "../src"
+import { Stream, listReducer } from "../src"
 
 describe("collection reducer:", () => {
-  it("should provide 'collectionReducer' helper", () => {
-    assert.isFunction(collectionReducer);
+  it("should provide 'listReducer' helper", () => {
+    assert.isFunction(listReducer);
   })
 
   it("helper should accept a function or string, and create a function", () => {
-    assert.isFunction(collectionReducer("prop"), "does not accept string");
-    assert.isFunction(collectionReducer(() => {}), "does not accept function");
+    assert.isFunction(listReducer("prop"), "does not accept string");
+    assert.isFunction(listReducer(() => {}), "does not accept function");
 
     assert.throws(
-      () => collectionReducer(null),
+      () => listReducer(null),
       /Argument must be a function or a string/,
       "does not throw otherwise"
     );
   })
 
   it("should expect functor as state by default", () => {
-    const reducer = collectionReducer("smth");
+    const reducer = listReducer("smth");
     const payload = { query: {}, data: undefined }
     assert.throws(
       () => reducer({}, payload),
@@ -30,7 +30,7 @@ describe("collection reducer:", () => {
   })
 
   it("should expect a plain object '{ query: Any, data: Any }' as a value", () => {
-    const reducer = collectionReducer("smth");
+    const reducer = listReducer("smth");
     assert.throws(
       () => reducer([], "value"),
     );
@@ -60,7 +60,7 @@ describe("collection reducer:", () => {
       [
         [
           subject.stream,
-          collectionReducer(reducer),
+          listReducer(reducer),
         ]
       ],
 
@@ -143,7 +143,7 @@ describe("collection reducer:", () => {
       [
         [
           subject.stream,
-          collectionReducer(reducer, mapper),
+          listReducer(reducer, mapper),
         ]
       ],
 

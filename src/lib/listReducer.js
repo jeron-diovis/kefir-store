@@ -12,7 +12,7 @@ function parseReducer(x) {
     return x
   }
 
-  throw new Error(`[kefir-store :: collectionReducer]
+  throw new Error(`[kefir-store :: listReducer]
     Argument must be a function or a string.
     Current: ${JSON.stringify(x)}
   `)
@@ -24,7 +24,7 @@ function ensureValidInput(x) {
     && x.hasOwnProperty("query")
     && x.hasOwnProperty("data")
   )) {
-    throw new Error(`[kefir-store :: collectionReducer]
+    throw new Error(`[kefir-store :: listReducer]
       Expected to get from stream a plain object with props "query" and "data".
       Current: ${JSON.stringify(x)}
     `)
@@ -33,7 +33,7 @@ function ensureValidInput(x) {
 
 function ensureValidState(x) {
   if (!F.isFunction(x.map)) {
-    throw new Error(`[kefir-store :: collectionReducer]
+    throw new Error(`[kefir-store :: listReducer]
       Expected state to have 'map' method. 
     `)
   }
