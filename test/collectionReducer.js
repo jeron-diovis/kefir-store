@@ -16,7 +16,7 @@ describe("collection reducer:", () => {
     );
   })
 
-  it("should expect functor as state", () => {
+  it("should expect functor as state by default", () => {
     const reducer = collectionReducer("smth");
     const payload = { query: {}, data: undefined }
     assert.throws(
@@ -112,6 +112,61 @@ describe("collection reducer:", () => {
       spy.lastCall.args[0],
       [ { value: 3 }, { value: 2 }, { value: 5 }, ],
       "Final state is wrong"
+    )
+  })
+
+  it("should allow custom mapper function", () => {
+    const subject = Subject()
+
+    const filterer = x => x.value !== 2;
+
+    const reducer = (state, value) => {
+      state.value = value
+      return value
+    };
+
+    const mapper = sinon.spy((fn, xs) => {
+      xs.forEach(fn);
+      return xs;
+    })
+
+    const store = Stream(
+      [
+        [
+          subject.stream,
+          collectionReducer(reducer, mapper),
+        ]
+      ],
+
+      [
+        { value: 1 },
+        { value: 2 },
+      ]
+    )
+
+    const spy = sinon.spy()
+    store.onValue(spy)
+
+    subject.handler({
+      query: filterer,
+      data: 42,
+    })
+
+    assert.equal(mapper.callCount, 1, "mapper isn't called once")
+
+    assert.deepEqual(
+      spy.getCall(1).args[0],
+      [
+        { value: 42 },
+        { value: 2 },
+      ],
+      "final state is wrong"
+    )
+
+    assert.deepEqual(
+      spy.getCall(0).args[0],
+      spy.getCall(1).args[0],
+      "state isn't updated in mutable way"
     )
   })
 })

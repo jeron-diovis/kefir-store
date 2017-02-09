@@ -39,13 +39,16 @@ function ensureValidState(x) {
   }
 }
 
-export default (x) => {
+export default (x, map = F.map) => {
   const reducer = parseReducer(x)
 
   return (state, arg) => {
     ensureValidState(state)
     ensureValidInput(arg)
     const matches = iteratee(arg.query)
-    return state.map((x, i) => !matches(x, state, i) ? x : reducer(x, arg.data))
+    return map(
+      (x, i) => !matches(x, state, i) ? x : reducer(x, arg.data),
+      state
+    )
   }
 }
