@@ -47,7 +47,7 @@ export default (x, map = F.map) => {
     ensureValidInput(arg)
     const matches = iteratee(arg.query)
     return map(
-      (x, i) => !matches(x, state, i) ? x : reducer(x, arg.data),
+      (x, i) => !matches(x, state, i) ? x : reducer(x, arg.data, state),
       state
     )
   }

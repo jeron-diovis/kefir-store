@@ -83,8 +83,17 @@ describe("collection reducer:", () => {
 
     // ---
 
-    assert.deepEqual(reducer.getCall(0).args, [{ value: 1 }, 2], "reducer does not receive proper args")
-    assert.deepEqual(reducer.getCall(1).args, [{ value: 3 }, 2], "reducer does not receive proper args")
+    assert.deepEqual(
+      reducer.getCall(0).args,
+      [ { value: 1 }, 2, STATE ],
+      "reducer does not receive proper args"
+    )
+
+    assert.deepEqual(
+      reducer.getCall(1).args,
+      [ { value: 3 }, 2, STATE ],
+      "reducer does not receive proper args"
+    )
 
     // ---
 
