@@ -70,7 +70,6 @@ describe("form :: validation :: validator config:", () => {
     })
   })
 
-  // TODO: check that options can be just a string
   describe("options:", () => {
     let validator
     const ERROR_MSG = "ERROR"
