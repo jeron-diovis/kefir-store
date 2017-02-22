@@ -1,5 +1,5 @@
 import * as F from "../lib/func_utils"
-import { toReducer } from "../lib/stream_utils"
+import { toReducer, initInputStream } from "../lib/stream_utils"
 import CONFIG from "../config"
 
 const hasItems = x => x.length > 0
@@ -22,7 +22,7 @@ export default class StreamParser {
 
   parseInput(x) {
     if (F.isStream(x)) {
-      return x
+      return initInputStream(x)
     }
 
     throw new Error("[kefir-store] Input must be an Observable")

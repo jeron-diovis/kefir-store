@@ -1,4 +1,5 @@
 import * as F from "../lib/func_utils"
+import { initInputStream } from "../lib/stream_utils"
 import Subject from "../lib/Subject"
 import StreamParser from "../Stream/Parser"
 
@@ -16,7 +17,11 @@ const handlersReducer = (handlers, { name, subject: { handler } }) => {
   return handlers
 }
 
-const pluckStreams = F.map(F.flow(F.prop("subject"), F.prop("stream")))
+const pluckStreams = F.map(F.flow(
+  F.prop("subject"),
+  F.prop("stream"),
+  initInputStream
+))
 
 // ---
 

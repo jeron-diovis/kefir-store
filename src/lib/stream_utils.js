@@ -16,3 +16,9 @@ export const async = $ => $.flatMap(x => (
 export const withTransform = F.curry((fn$, x$) => ap(fn$, of(x$)).flatMapLatest())
 
 export const toReducer = x => F.isFunction(x) ? of(F.map(F.spread(x))) : x
+
+/*
+ * Always omit initial value.
+ * It is logical: store consists of it's current state and *streams of changes*.
+ */
+export const initInputStream = x => x.changes()
