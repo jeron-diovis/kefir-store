@@ -3,8 +3,12 @@ import Bus from "kefir-bus"
 
 const Subject = (init = F.id) => {
   const bus = Bus()
+
+  // use .changes to create new observable, without emit/plug/etc methods
+  const stream = bus.changes()
+
   return {
-    stream: init(bus.changes()), // use .changes to create new observable, without emit/plug/etc methods
+    stream: init(stream) || stream,
     handler: bus.emit,
   }
 }
