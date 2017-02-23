@@ -18,7 +18,7 @@
     "lint:watch": "npm run lint -- -w",
     "start": "parallelshell 'npm run test:watch' 'npm run lint:watch'",
     "clean": "rm -rf dist lib",
-    "of": "npm run build:transpile && npm run build:bundle",
+    "build": "npm run build:transpile && npm run build:bundle",
     "build:bundle": "webpack",
     "build:transpile": "babel src -d lib",
     "prebuild": "npm run lint && npm test && npm run clean"
