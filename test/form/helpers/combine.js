@@ -187,5 +187,44 @@ describe("form :: helpers :: combine:", () => {
 
       assert.isTrue(spy.getCall(4).args[0].status.isResetted)
     })
+
+    it("should terminate stream of aggregated values after it emits once", () => {
+      let form
+
+      const combo$ = Form.combine({
+        f1: Form([
+          [ "setFoo", "foo" ]
+        ]),
+        f2: Form(),
+      })
+
+      combo$.onValue(x => {
+        form = x
+      })
+
+      const spy = sinon.spy()
+      combo$.changes().onValue(spy)
+
+      assert.doesNotThrow(
+        () => {
+          // internally, new stream, buffered by 2 (2 combined forms),
+          // is generated and has emitted
+          form.handlers.validate()
+
+          // Now, if it wasn't terminated,
+          // after next two updates it will emit again,
+          // and God knows what can happen then.
+          //
+          // In current implementation, form status is mutated
+          // (as it's totally internal at this stage, so it's acceptable),
+          // and so handler of aggregated stream gets the result of main stream
+          form.handlers.f1.setFoo()
+          form.handlers.f1.setFoo()
+        },
+        /\.every is not a function/
+      )
+
+      assert.equal(spy.callCount, 3, "form isn't updated 3 times")
+    })
   })
 })

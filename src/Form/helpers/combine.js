@@ -79,6 +79,7 @@ export default function combineForms(cfg) {
           })
           return x
         })
+        .take(1)
     )
   )
 
