@@ -9,7 +9,9 @@ const Subject = (init = F.id) => {
 
   return {
     stream: init(stream) || stream,
-    handler: bus.emit,
+    handler(x) {
+      bus.emit(x)
+    },
   }
 }
 
