@@ -7,45 +7,57 @@ describe("form :: helpers :: validatedOn:", () => {
 
   describe("should run validation and emit form state if it is valid", () => {
     it("when initial state is valid", () => {
-      const form = Form([
-        [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
-      ], {
-        value: 1
+      FakeAsync(tick => {
+        const VALIDATOR_TIMEOUT = 50
+
+        const validator = x => new Promise(res => {
+          setTimeout(res, VALIDATOR_TIMEOUT, x > 0 ? null : "Error")
+        })
+
+        const form = Form([
+          [ "setValue", "value", validator ]
+        ], {
+          value: 1
+        })
+
+        const $validationTriggerEvent = Subject()
+
+        const spyForm = sinon.spy()
+        const spyValidState = sinon.spy()
+
+        form.stream.changes().onValue(spyForm)
+        Form.validatedOn(form, $validationTriggerEvent.stream).onValue(spyValidState)
+
+        assert.equal(spyValidState.callCount, 0, "streams emits before any event")
+
+        $validationTriggerEvent.handler()
+        tick(VALIDATOR_TIMEOUT)
+
+        assert.equal(spyForm.callCount, 1, "form isn't updated after initial validation")
+        assert.isTrue(
+          spyForm.getCall(0).args[0].status.isValid,
+          "form isn't valid after validation"
+        )
+
+        assert.equal(spyValidState.callCount, 1, "valid state isn't updated after initial validation")
+        assert.deepEqual(
+          spyValidState.getCall(0).args[0], { value: 1 },
+          "wrong valid state after first validation"
+        )
+
+        form.handlers.setValue(0)
+        tick(VALIDATOR_TIMEOUT)
+
+        $validationTriggerEvent.handler()
+        tick(VALIDATOR_TIMEOUT)
+
+        assert.equal(spyForm.callCount, 3, "form isn't updated 3 times")
+        assert.isFalse(
+          spyForm.lastCall.args[0].status.isValid,
+          "form isn't invalid after setting wrong value"
+        )
+        assert.equal(spyValidState.callCount, 1, "valid state is updated after setting wrong value")
       })
-
-      const $validationTriggerEvent = Subject()
-
-      const spyForm = sinon.spy()
-      const spyValidState = sinon.spy()
-
-      form.stream.changes().onValue(spyForm)
-      Form.validatedOn(form, $validationTriggerEvent.stream).onValue(spyValidState)
-
-      assert.equal(spyValidState.callCount, 0, "streams emits before any event")
-
-      $validationTriggerEvent.handler()
-
-      assert.equal(spyForm.callCount, 1, "form isn't updated after initial validation")
-      assert.isTrue(
-        spyForm.getCall(0).args[0].status.isValid,
-        "form isn't valid after validation"
-      )
-
-      assert.equal(spyValidState.callCount, 1, "valid state isn't updated after initial validation")
-      assert.deepEqual(
-        spyValidState.getCall(0).args[0], { value: 1 },
-        "wrong valid state after first validation"
-      )
-
-      form.handlers.setValue(0)
-      $validationTriggerEvent.handler()
-
-      assert.equal(spyForm.callCount, 3, "form isn't updated 3 times")
-      assert.isFalse(
-        spyForm.lastCall.args[0].status.isValid,
-        "form isn't invalid after setting wrong value"
-      )
-      assert.equal(spyValidState.callCount, 1, "valida state isn't updated")
     })
 
     it("when initial state is invalid", () => {

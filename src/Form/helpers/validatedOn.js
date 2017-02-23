@@ -1,15 +1,17 @@
-import { prop, flow, curry } from "../../lib/func_utils"
+import * as F from "../../lib/func_utils"
 import { ap } from "../../lib/stream_utils"
 import toStream from "./toStream"
 
-const getIsValid = flow(prop("status"), prop("isValid"))
-const getValidator = flow(prop("handlers"), prop("validate"))
-const getState = prop("state")
+const getIsValid = F.flow(F.prop("status"), F.prop("isValid"))
+const getValidator = F.flow(F.prop("handlers"), F.prop("validate"))
+const getState = F.prop("state")
 
-export default curry((form, event$) => {
+export default F.curry((form, event$) => {
   const form$ = toStream(form)
-  const validatorCall$ = ap(form$.map(getValidator), event$)
-  const validatedState$ = form$.map(getIsValid).sampledBy(validatorCall$)
-  const validEvent$ = event$.changes().filterBy(validatedState$)
-  return form$.sampledBy(validEvent$).map(getState)
+  const result$ = (
+    event$
+      .flatMapLatest(() => form$.changes().take(1))
+      .zip(ap(form$.map(getValidator), event$), F.id)
+  )
+  return result$.filter(getIsValid).map(getState).toProperty()
 })
