@@ -140,7 +140,16 @@ class Form extends Model {
 
 // ---
 
-
+/**
+ * @typedef {Function} KefirStore_Form
+ * @property {Function} combine
+ * @property {Function} asStream
+ * @property {Function} toStream
+ * @property {Function} validatedOn
+ * @property {Function} validOn
+ *
+ * @type KefirStore_Form
+ */
 const of = Form.of.bind(Form)
 
 Object.assign(of, helpers)

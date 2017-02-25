@@ -81,4 +81,10 @@ Stream.of = function(...args) {
 // ---
 
 export const Class = Stream
+
+/**
+ * @typedef {Function} KefirStore_Stream
+ *
+ * @type KefirStore_Stream
+ */
 export default Stream.of.bind(Stream)

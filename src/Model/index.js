@@ -27,6 +27,13 @@ class Model extends Stream {
 
 // ---
 
+/**
+ * @typedef {Function} KefirStore_Model
+ * @property {Function} asStream
+ * @property {Function} toStream
+ *
+ * @type KefirStore_Model
+ */
 const of = Model.of.bind(Model)
 
 of.toStream = model => {
