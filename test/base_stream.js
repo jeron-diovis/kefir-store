@@ -6,12 +6,11 @@ describe("basic stream:", () => {
     const spy = sinon.spy()
     store.onValue(spy)
 
-    assert(spy.calledOnce)
-    assert.deepEqual(spy.getCall(0).args[0], {})
+    assert.equal(spy.callCount, 1, "Observable isn't a Property")
+    assert.deepEqual(spy.getCall(0).args[0], {}, "Initial state isn't empty")
   })
 
   it("should require Observable as input", () => {
-    const subject = Subject()
     const setup = () => Stream([
       [ 42, () => {} ]
     ])

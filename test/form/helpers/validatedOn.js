@@ -29,7 +29,11 @@ describe("form :: helpers:", () => {
         form.stream.changes().onValue(spyForm)
         Form.validatedOn(form, $validationTriggerEvent.stream).onValue(spyValidated)
 
+        // ---
+
         assert.equal(spyValidated.callCount, 0, "streams emits before any event")
+
+        // ---
 
         $validationTriggerEvent.handler()
         tick(VALIDATOR_TIMEOUT)
@@ -41,6 +45,8 @@ describe("form :: helpers:", () => {
           spyValidated.getCall(0).args[0].state, { value: 1 },
           "wrong valid state after first validation"
         )
+
+        // ---
 
         form.handlers.setValue(0)
         tick(VALIDATOR_TIMEOUT)
@@ -139,7 +145,7 @@ describe("form :: helpers:", () => {
 
         assert.equal(spyForm.callCount, 3)
 
-        assert.equal(spyValidState.callCount, 1)
+        assert.equal(spyValidState.callCount, 1, "valid state isn't updated after setting correct value")
         assert.deepEqual(spyValidState.getCall(0).args[0], { value: 1 })
       })
 
