@@ -1,8 +1,13 @@
 import Kefir from "kefir"
+import Subject from "../lib/Subject"
 import * as S from "../lib/stream_utils"
 import * as F from "../lib/func_utils"
 import CONFIG from "../config"
 import Parser from "./Parser"
+
+// ---
+
+const tap = f => x => (f(x), x)
 
 // ---
 
@@ -21,12 +26,7 @@ class Stream {
    * @protected
    */
   _init(initialState$) {
-    const pool$ = Kefir.pool()
-    const state$ = pool$.merge(initialState$)
-
     this.initialState$ = initialState$
-    this.state$ = state$
-    this.pool$ = pool$
   }
 
   /**
@@ -65,10 +65,43 @@ class Stream {
    * @protected
    */
   _build(fields) {
-    const { state$, pool$ } = this
+    const { initialState$ } = this
 
-    pool$.plug(Kefir.merge(this._createStreams(state$, fields)))
-    return state$.toProperty()
+    /**
+     * The core concept is to merge several streams
+     * so output of each of them is available for next input of each other one.
+     *
+     * For a single stream it's a standard operation, performed with `scan` operator.
+     * For multiple streams I don't know standard solutions.
+     *
+     * Specifically in Kefir there is a `pool` operator
+     * @link https://rpominov.github.io/kefir/#pool
+     * and technically it's possible to plug pool to itself,
+     * creating a loop we need here.
+     * It works, but it causes small but important problem
+     * with Kefir's activation/deactivation system:
+     * such looped pool somehow remains active even when there are no listeners on it,
+     * so it won't emit output, but reducers on input streams still will be executed,
+     * which can be very undesired.
+     *
+     * So, to achieve our goal,
+     * we'll create our merged state stream, take it's output, and push it to itself.
+     * As state is a passive stream, sampled by input fields, it won't fall into infinite loop.
+     *
+     * It's not a "pure" solution on observables, but it perfectly does what we need.
+     */
+    const {
+      stream: currentState$,
+      handler: setCurrentState,
+    } = Subject($ => $.merge(initialState$).toProperty())
+
+    const fields$ = Kefir.merge(this._createStreams(currentState$, fields))
+
+    return (
+      initialState$
+        .merge(fields$.map(tap(setCurrentState)))
+        .toProperty()
+    )
   }
 }
 
