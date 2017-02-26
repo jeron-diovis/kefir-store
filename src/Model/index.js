@@ -28,10 +28,21 @@ class Model extends Stream {
 // ---
 
 /**
- * @typedef {Function} KefirStore_Model
- * @property {Function} asStream
- * @property {Function} toStream
- *
+ * @callback KefirStore_Model
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Model.toStream
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Model.asStream
+ * @return {Observable}
+ */
+
+/**
  * @type KefirStore_Model
  */
 const of = Model.of.bind(Model)

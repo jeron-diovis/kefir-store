@@ -1,6 +1,10 @@
 import * as F from "./func_utils"
 import Bus from "kefir-bus"
 
+/**
+ * @param {function(Observable)} init
+ * @return {{stream: Observable, handler: function(*=)}}
+ */
 const Subject = (init = F.id) => {
   const bus = Bus()
 

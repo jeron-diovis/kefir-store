@@ -141,13 +141,31 @@ class Form extends Model {
 // ---
 
 /**
- * @typedef {Function} KefirStore_Form
- * @property {Function} combine
- * @property {Function} asStream
- * @property {Function} toStream
- * @property {Function} validatedOn
- * @property {Function} validOn
- *
+ * @callback KefirStore_Form
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Form.toStream
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Form.asStream
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Form.validatedOn
+ * @return {Observable}
+ */
+
+/**
+ * @callback KefirStore_Form.validOn
+ * @return {Observable}
+ */
+
+/**
  * @type KefirStore_Form
  */
 const of = Form.of.bind(Form)
