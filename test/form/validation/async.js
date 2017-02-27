@@ -63,7 +63,7 @@ describe("form :: validation :: async validators:", () => {
       tick(INPUT_TIMEOUT)
       tick(VALIDATOR_TIMEOUT)
 
-      assert.equal(spy.callCount, 1, "Validator is called multiple times")
+      assert.equal(spy.callCount, 1, "Validator is not called once")
       assert.deepEqual(spy.lastCall.args[0].errors, { value: "3 is invalid" })
     })
   })

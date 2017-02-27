@@ -80,26 +80,26 @@ describe("form :: base:", () => {
 
   // ---
 
-  const testFormStream = form$ => {
-    assert.instanceOf(form$, Kefir.Observable, "Form is not an Observable")
+  describe("static helpers", () => {
+    const testFormStream = form$ => {
+      assert.instanceOf(form$, Kefir.Observable, "Form is not an Observable")
 
-    const spy = sinon.spy()
-    form$.onValue(spy)
+      const spy = sinon.spy()
+      form$.onValue(spy)
 
-    const result = spy.lastCall.args[0]
-    assert.deepEqual(result.state, { value: "initial value" })
-    assert.deepEqual(result.errors, {})
-    assert.deepEqual(result.status, {
-      isValid: undefined,
-      isValidated: false,
-      isResetted: false,
-    })
-    assert.isFunction(result.handlers.validate)
-    assert.isFunction(result.handlers.reset)
-  }
+      const result = spy.lastCall.args[0]
+      assert.deepEqual(result.state, { value: "initial value" })
+      assert.deepEqual(result.errors, {})
+      assert.deepEqual(result.status, {
+        isValid: undefined,
+        isValidated: false,
+        isResetted: false,
+      })
+      assert.isFunction(result.handlers.validate)
+      assert.isFunction(result.handlers.reset)
+    }
 
-  describe("asStream:", () => {
-    it("should be an Observable<{ handlers, state, errors, status }>", () => {
+    it("asStream: should create an Observable<{ handlers, state, errors, status }>", () => {
       assert.isFunction(Form.asStream)
 
       testFormStream(Form.asStream(
@@ -107,10 +107,8 @@ describe("form :: base:", () => {
         { value: "initial value" }
       ))
     })
-  })
 
-  describe("toStream:", () => {
-    it("should convert form object into Observable", () => {
+    it("toStream: should convert form object into Observable", () => {
       assert.isFunction(Form.toStream)
 
       const form = Form.toStream(Form(
@@ -121,7 +119,6 @@ describe("form :: base:", () => {
       testFormStream(form)
     })
   })
-
 
   // ---
 
