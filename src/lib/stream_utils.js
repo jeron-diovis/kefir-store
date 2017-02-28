@@ -22,3 +22,16 @@ export const toReducer = x => F.isFunction(x) ? of(F.map(F.spread(x))) : x
  * It is logical: store consists of it's current state and *streams of changes*.
  */
 export const initInputStream = x => x.changes()
+
+export const indexed = $ => (
+  $.scan(
+    (state, value) => {
+      // only for internal usage, so mutable state is ok
+      state.value = value
+      ++state.idx
+      return state
+    },
+    { idx: 0 }
+  )
+  .changes()
+)

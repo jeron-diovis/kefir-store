@@ -120,6 +120,72 @@ describe("form :: base:", () => {
     })
   })
 
+  describe("should allow for stream-reducer to emit multiple updates", () => {
+    it("for validated input", () => {
+      const form = Form([
+        [
+          "setValue",
+          Kefir.constant($ => $
+            .map(([ state, value ]) => ({
+              ...state, value
+            }))
+            .flatten(x => [ x, x ])
+          ),
+
+          [
+            x => x > 0 ? null : "ERROR",
+            "value"
+          ]
+        ],
+      ])
+
+      const spy = sinon.spy()
+
+      form.stream.changes().onValue(spy)
+
+      form.handlers.setValue(0)
+      form.handlers.setValue(1)
+
+      assert.equal(spy.callCount, 3)
+
+      const getState = x => spy.getCall(x).args[0].state
+
+      assert.deepEqual(getState(0), { value: 0 })
+      assert.deepEqual(getState(1), { value: 1 })
+      assert.deepEqual(getState(2), { value: 1 })
+    })
+
+    it("for non-validated input", () => {
+      const form = Form([
+        [
+          "setValue",
+          Kefir.constant($ => $
+            .map(([ state, value ]) => ({
+              ...state, value
+            }))
+            .flatten(x => [ x, x ])
+          )
+        ],
+      ])
+
+      const spy = sinon.spy()
+
+      form.stream.changes().onValue(spy)
+
+      form.handlers.setValue(0)
+      form.handlers.setValue(1)
+
+      assert.equal(spy.callCount, 4)
+
+      const getState = x => spy.getCall(x).args[0].state
+
+      assert.deepEqual(getState(0), { value: 0 })
+      assert.deepEqual(getState(1), { value: 0 })
+      assert.deepEqual(getState(2), { value: 1 })
+      assert.deepEqual(getState(3), { value: 1 })
+    })
+  })
+
   // ---
 
 
