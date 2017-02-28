@@ -1,5 +1,4 @@
 import * as F from "../lib/func_utils"
-import { toReducer, initInputStream } from "../lib/stream_utils"
 import CONFIG from "../config"
 
 const hasItems = x => x.length > 0
@@ -22,27 +21,50 @@ export default class StreamParser {
 
   parseInput(x) {
     if (F.isStream(x)) {
-      return initInputStream(x)
+      return { stream: x, init: F.id }
     }
 
-    throw new Error("[kefir-store] Input must be an Observable")
+    if (Array.isArray(x)) {
+      return this.parseArrayInput(x)
+    }
+
+    throw new Error(`[kefir-store] Invalid input.
+      Input must be either Observable or [ Observable, function ].
+      Current: ${JSON.stringify(x)}
+    `)
+  }
+
+  parseArrayInput([ stream, init ]) {
+    if (!F.isStream(stream)) {
+      throw new Error(`[kefir-store] Invalid input.
+        When input defined as array, first value must be an Observable.
+        Current: ${JSON.stringify(stream)}
+      `)
+    }
+
+    if (!F.isFunction(init)) {
+      throw new Error(`[kefir-store] Invalid input.
+        When input defined as array, second value must be a function Observable -> Observable.
+        Current: ${JSON.stringify(init)}
+      `)
+    }
+
+    return { stream, init }
   }
 
   parseReducer(x) {
     if (F.isString(x)) {
-      x = CONFIG.reducer(x)
+      return CONFIG.reducer(x)
     }
 
-    x = toReducer(x)
-
-    if (!F.isStream(x)) {
-      throw new Error(`[kefir-store] Invalid reducer
-        Must be either string, or (state, patch) -> newState,
-        or Observable.<(Observable.<Array.<state, patch>> -> Observable.<new_state>)>
-      `)
+    if (F.isFunction(x)) {
+      return x
     }
 
-    return x
+    throw new Error(`[kefir-store] Invalid reducer
+      Must be either string, or function state -> patch -> new_state.
+      Current: ${JSON.stringify(x)}
+    `)
   }
 }
 

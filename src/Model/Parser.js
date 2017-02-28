@@ -1,5 +1,4 @@
 import * as F from "../lib/func_utils"
-import { initInputStream } from "../lib/stream_utils"
 import Subject from "../lib/Subject"
 import StreamParser from "../Stream/Parser"
 
@@ -8,7 +7,7 @@ import StreamParser from "../Stream/Parser"
 const NONAME = Object.create(null)
 const noop = () => {}
 
-const handlersReducer = (handlers, { name, subject: { handler } }) => {
+const handlersReducer = (handlers, { name, handler }) => {
   if (handlers.hasOwnProperty(name)) {
     throw new Error(`[kefir-store :: model] Handler '${name}' already exists`)
   }
@@ -17,80 +16,70 @@ const handlersReducer = (handlers, { name, subject: { handler } }) => {
   return handlers
 }
 
-const pluckStreams = F.map(F.flow(
-  F.prop("subject"),
-  F.prop("stream"),
-  initInputStream
-))
-
-// ---
-
-const parseKey = x => {
-  if (F.isString(x)) {
-    return x
-  }
-
-  if (x === NONAME) {
-    return x
-  }
-
-  throw new Error(`[kefir-store :: model] Invalid input.
-    If input is an array, it should have following format:
-    [ String, Function|Observable|Subject ]
-    Current: array first value: ${JSON.stringify(x)}
-  `)
-}
-
-const parseSubject = x => {
-  if (Subject.is(x)) {
-    return { ...x }
-  }
-
-  if (F.isStream(x)) {
-    return Subject($ => $.merge(x))
-  }
-
-  if (F.isFunction(x)) {
-    return Subject(x)
-  }
-
-  throw new Error(`[kefir-store :: model] Invalid input.
-    If input is an array, it should have following format:
-    [ String, Function|Observable|Subject ]
-    Current: array second value: ${JSON.stringify(x)}
-  `)
-}
-
 // ---
 
 export default class ModelParser extends StreamParser {
 
   parseInput(x) {
     if (F.isStream(x)) {
-      return { name: NONAME, subject: { stream: x, handler: noop } }
+      return {
+        init: F.id,
+        name: NONAME,
+        stream: x,
+        handler: noop,
+      }
     }
 
     if (F.isString(x)) {
-      return { name: x, subject: Subject() }
+      return {
+        init: F.id,
+        name: x,
+        ...Subject(),
+      }
     }
 
     if (Array.isArray(x)) {
-      return { name: parseKey(x[0]), subject: parseSubject(x[1]) }
+      return this.parseArrayInput(x)
     }
 
     throw new Error(`[kefir-store :: model] Invalid input.
-      Input must be either Observable, or String, or array of following format:
-      [ String, Function|Observable|Subject ]
+      Input must be either Observable, or String, 
+      or array of following format: [ String|Observable, Function ]
       Current: ${JSON.stringify(x)}
+    `)
+  }
+
+  parseArrayInput(array) {
+    const [ first, second ] = array
+
+    if (F.isString(first)) {
+      const { stream, handler } = Subject()
+      return {
+        name: first,
+        handler,
+        ...super.parseArrayInput([ stream, second ])
+      }
+    }
+
+    if (F.isStream(first)) {
+      return {
+        name: NONAME,
+        ...super.parseArrayInput([ first, second ])
+      }
+    }
+
+    throw new Error(`[kefir-store :: model] Invalid input.
+      If input is an array, it should have following format:
+      [ String|Observable, Function ]
+      Current:  ${JSON.stringify(array)}
     `)
   }
 
   parse(...args) {
     const [ inputs = [], reducers = [], ...rest ] = F.zip(...super.parse(...args))
     return {
-      fields: F.zip(pluckStreams(inputs), reducers, ...rest),
+      fields: F.zip(inputs, reducers, ...rest),
       handlers: inputs.filter(({ name }) => name !== NONAME).reduce(handlersReducer, {}),
     }
   }
-
 }

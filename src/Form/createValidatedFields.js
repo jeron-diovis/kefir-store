@@ -9,6 +9,19 @@ const getErrorProp = F.prop("error")
 
 // ---
 
+const indexed = $ => (
+  $.scan(
+    (state, value) => {
+      // only for internal usage, so mutable state is ok
+      state.value = value
+      ++state.idx
+      return state
+    },
+    { idx: 0 }
+  )
+  .changes()
+)
+
 const negate = fn => (...args) => !fn(...args)
 
 const partition = F.curry((predicate, $) => [
@@ -24,7 +37,9 @@ const splitByValidity = F.flow(
 
 // ---
 
-export default F.curry((state$, { input$, reducer$, validator }) => {
+export default F.curry((state$, { input, reducer, validator }) => {
+  const input$ = input.init(input.stream, state$)
+
   // Each input value is validated.
   // Each value should be emitted synchronously with validation result for it.
   // But validator can be async.
@@ -32,8 +47,8 @@ export default F.curry((state$, { input$, reducer$, validator }) => {
   // then we are no more interested in neither prev value nor it's validation result.
   const validated$ = (
     S.withLatestFrom(
-      S.indexed(validator.ap(S.withLatestFrom(input$, state$))),
-      S.indexed(input$)
+      indexed(validator.ap(S.withLatestFrom(input$, state$))),
+      indexed(input$)
     )
     .filter(([ error, input ]) => error.idx === input.idx)
     .map(([ error, input ]) => ({ error: error.value, value: input.value }))
@@ -47,13 +62,9 @@ export default F.curry((state$, { input$, reducer$, validator }) => {
     // It can be important for controlled inputs in React, for example.
     F.zip(
       splitByValidity(validated$),
-      [ reducer$, S.toReducer(validator.setInvalid) ]
+      [ reducer, validator.setInvalid ]
     ),
 
-    // validation of particular input when it changes:
-    [
-      validated$.map(getErrorProp),
-      S.toReducer(validator.setError),
-    ],
+    [ validated$.map(getErrorProp), validator.setError ]
   ]
 })

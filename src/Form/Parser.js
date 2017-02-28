@@ -1,3 +1,4 @@
+import Kefir from "kefir"
 import ModelParser from "../Model/Parser"
 
 import * as F from "../lib/func_utils"
@@ -6,16 +7,26 @@ import CONFIG from "../config"
 
 // ---
 
+const toReducerStream = x => F.isFunction(x) ? S.of(F.map(F.spread(x))) : x
+
 // Observable.<F> -> Observable.<x> -> Observable.<F(x)>
 const toErrorStream = F.flow(
-  S.withTransform,
+  F.curry((fn$, x$) => S.ap(fn$, S.of(x$)).flatMapLatest()),
+
   F.compose.bind(null,
     // If validator throws an exception and it was not handled,
     // pass it's text directly to form
     $ => $.mapErrors(String).flatMapErrors(S.of),
-    S.async
+
+    // automatically handle promises,
+    // allowing to easily use both sync and async validator function
+    $ => $.flatMap(x => (
+      (x && x.then) ? Kefir.fromPromise(x) : S.of(x)
+    ))
   )
 )
+
+// ---
 
 const createValidatorOptionsFromProp = prop => ({
   get: CONFIG.getter(prop),
@@ -34,7 +45,6 @@ function ensureHandlersValid(handlers) {
 
   return handlers
 }
-
 
 /**
  * @param {Array|Function|Observable<Function>} x
@@ -73,7 +83,7 @@ function parseValidator(x, opts) {
 
   // ---
 
-  validator = S.toReducer(validator)
+  validator = toReducerStream(validator)
 
   if (!F.isStream(validator)) {
     throw new Error(`[kefir-store :: form] Validation config.
@@ -94,7 +104,7 @@ function parseValidator(x, opts) {
       Unless reducer defined as a string, you should define validator with opts:
       [ validatorFn, {
         get: state -> value,
-        set: state -> patch -> newState,
+        set: state -> patch -> new_state,
         key: String,
       } ]
       Current: ${JSON.stringify(opts)}
@@ -115,8 +125,8 @@ function parseValidator(x, opts) {
 
 // only and only for better readability in further code
 const fieldToDict = (
-  ([ input$, reducer$, validator ]) => ({
-    input$, reducer$, validator
+  ([ input, reducer, validator ]) => ({
+    input, reducer, validator
   })
 )
 
@@ -126,6 +136,7 @@ export default class FormParser extends ModelParser {
 
   parse(...args) {
     const { fields, handlers } = super.parse(...args)
+
     return {
       fields: fields.map(fieldToDict),
       handlers: ensureHandlersValid(handlers),

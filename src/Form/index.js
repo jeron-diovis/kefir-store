@@ -7,7 +7,6 @@ import { Class as Model } from "../Model"
 import Subject from "../lib/Subject"
 
 import * as F from "../lib/func_utils"
-import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
 
 import createValidatedFields from "./createValidatedFields"
@@ -68,82 +67,21 @@ class Form extends Model {
   _createInputStream(current, cfg) {
     const [ inputFields, errorField ] = createValidatedFields(current.state$, cfg)
 
-    const state$ = Kefir.merge(inputFields.map(
-      x => super._createInputStream(current.state$, x)
-    ))
+    return [
+      Kefir.merge(inputFields.map(
+        x => super._createInputStream(current.state$, x)
+      )),
 
-    const errors$ = super._createInputStream(current.errors$, errorField)
-
-    /*
-     * Using indexed streams to implement custom combination logic.
-     *
-     * Can't just zip or combine state + errors,
-     * because there are several special cases, breaking simple flow.
-     *
-     * I'm sure it will prove itself to be unreliable,
-     * and there should be a way to do this better,
-     * but for now I don't know how.
-     */
-    return (
-      S.withLatestFrom(
-        /*
-         * Consider state as active stream, and input and errors as passive.
-         *
-         * Because input is *trigger which starts generating new states*,
-         * and error is *meta data for input*.
-         *
-         * That is, each emitted state update checks, *how it was generated*,
-         * and so decides whether it is allowed.
-         */
-        S.indexed(state$),
-
-        Kefir.combine([
-          S.indexed(cfg.input$),
-          S.indexed(errors$),
-        ]),
-
-        (state, pair) => {
-          pair.push(state)
-          return pair
-        }
-      )
-      .filter(([ input, errors, state ]) => (
-        (
-          // simplest case: single update both for state and errors
-          state.idx === errors.idx
-          && state.idx === input.idx
-        ) || (
-          // multiple state updates for a single input
-          input.idx === errors.idx
-          && state.idx > input.idx
-        ) || (
-          // interrupting inputs:
-          // async reducer/validator with duration more than inputs interval
-          input.idx > errors.idx
-          && input.idx > state.idx
-        )
-      ))
-      /* `scan` is here just for mutability,
-       * to don't generate new objects with `map`,
-       * – because it's only for internal usage */
-      .scan(
-        (memo, [ , errors, state ]) => {
-          memo.state = state.value
-          memo.errors = errors.value
-          return memo
-        },
-        {}
-      )
-      .changes()
-    )
+      super._createInputStream(current.errors$, errorField),
+    ]
   }
 
   _createMainStream(current, fields) {
-    const stream = Kefir.merge(super._createStreams(current, fields))
+    const [ state = [], errors = [] ] = F.zip(...super._createStreams(current, fields))
 
     return zipFormParts(
-      stream.map(F.prop("state")),
-      stream.map(F.prop("errors")),
+      Kefir.merge(state),
+      Kefir.merge(errors),
       current.status$.map(resetMetaStatuses)
     )
   }

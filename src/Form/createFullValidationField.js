@@ -1,10 +1,10 @@
 import Kefir from "kefir"
 import * as F from "../lib/func_utils"
-import { toReducer } from "../lib/stream_utils"
 
 const setError = (state, [ setter, error ]) => setter(state, error)
-const errorsReducer = toReducer((state, list) => list.reduce(setError, state))
-const noopReducer = toReducer(F.id)
+
+const errorsReducer = (state, list) => list.reduce(setError, state)
+const noopReducer = F.id
 
 const applyValidator = F.curry((state$, validator) =>
   validator.ap(state$.map(x => [ validator.getFromState(x), x ])))

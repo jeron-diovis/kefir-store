@@ -61,7 +61,11 @@ describe("form :: validation :: validate all", () => {
   it("should set 'isValidated' prop in validity state", () => {
     const subj = Subject()
     const form$ = Form.asStream([
-      [ [ "setValue", subj ], "value", toValidator(x => x > 0, "error") ],
+      [
+        [ "setValue", $ => $.merge(subj.stream) ],
+        "value",
+        toValidator(x => x > 0, "error")
+      ],
     ])
 
     let validate
@@ -75,7 +79,16 @@ describe("form :: validation :: validate all", () => {
     validate()
     subj.handler(1)
 
-    assert.isTrue(spy.getCall(0).args[0].status.isValidated, "'isValidated' isn't true after calling validate")
-    assert.isFalse(spy.getCall(1).args[0].status.isValidated, "'isValidated' isn't false after regular store update")
+    assert.equal(spy.callCount, 2, "Form isn't updated twice")
+
+    assert.isTrue(
+      spy.getCall(0).args[0].status.isValidated,
+      "'isValidated' isn't true after calling validate"
+    )
+
+    assert.isFalse(
+      spy.getCall(1).args[0].status.isValidated,
+      "'isValidated' isn't false after regular store update"
+    )
   })
 })

@@ -47,7 +47,7 @@ describe("form :: validation :: validator config:", () => {
 
       const form$ = Form.asStream([
         [
-          [ "setValue", subj ],
+          [ "setValue", $ => $.merge(subj.stream) ],
           "value",
           Kefir.constant($ => $.delay().map(([ value, state ]) => (
             value === state.equalTo ? null : "ERROR"
@@ -90,7 +90,11 @@ describe("form :: validation :: validator config:", () => {
 
     it("'key': should define a prop name in errors map", () => {
       const form = Form([
-        [ "setValue", (state, value) => ({ ...state, value }),
+        [
+          "setValue",
+
+          (state, value) => ({ ...state, value }),
+
           [ validator, cfg({
             key: "my_error"
           }) ]
@@ -107,7 +111,11 @@ describe("form :: validation :: validator config:", () => {
 
     it("'set': should describe how to update state when input is invalid", () => {
       const form = Form([
-        [ "setValue", (state, value) => ({ ...state, value }),
+        [
+          "setValue",
+
+          (state, value) => ({ ...state, value }),
+
           [ validator, cfg({
             set: (state, value) => ({ ...state, value: value * 2 })
           }) ]
@@ -127,7 +135,9 @@ describe("form :: validation :: validator config:", () => {
       const form = Form([
         [
           [ "setValue", $ => $.diff(null, 0) ],
+
           (state, [ prev_value, value ]) => ({ ...state, value, prev_value }),
+
           [ validator, cfg({
             get: state => state.prev_value,
           }) ]
