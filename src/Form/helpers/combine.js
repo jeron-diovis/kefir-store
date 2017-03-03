@@ -34,11 +34,11 @@ const combine = F.curry((keys, values) => {
             switch (fieldName) {
               case "state":
                 memo[formName] = state
-                break;
+                break
 
               case "status":
                 memo[formName] = DEFAULT_STATUS
-                break;
+                break
 
               default:
                 memo[formName] = EMPTY_OBJECT
@@ -71,7 +71,7 @@ export default function combineForms(cfg) {
   const [ keys, forms ] = F.zip(...F.entries(cfg))
 
   if (!forms.every(F.isStream)) {
-    throw new Error(`[kefir-store :: combine] You should pass only observables to 'combine' helper`)
+    throw new Error("[kefir-store :: combine] You should pass only observables to 'combine' helper")
   }
 
   const formsList$ = Kefir.combine(forms.map(toStream)).toProperty()
