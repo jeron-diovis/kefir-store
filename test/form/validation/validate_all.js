@@ -15,42 +15,16 @@ describe("form :: validation :: validate all", () => {
     const spy = sinon.spy()
     form.stream.changes().onValue(spy)
 
+    // ---
+
     form.handlers.validate()
 
-    assert.equal(spy.callCount, 1, "Validity isn't updated after validation")
-
-    const result = spy.lastCall.args[0];
-
-    assert.deepEqual(result.errors, {
-      foo: "foo_error",
-      bar: null,
-    })
-    assert.isFalse(result.status.isValid, "Form's validity isn't updated properly")
-  })
-
-  it("should work for Form.asStream", () => {
-    let validate
-
-    const form$ = Form.asStream([
-      [ "setFoo", "foo", toValidator(x => x > 0, "foo_error") ],
-      [ "setBar", "bar", toValidator(x => x > 0, "bar_error") ],
-    ], {
-      foo: 0,
-      bar: 1,
-    })
-
-    const spy = sinon.spy()
-
-    form$.take(1).onValue(({ handlers }) => {
-      validate = handlers.validate
-    })
-
-    form$.changes().onValue(spy)
-
-    validate()
-
     assert.equal(spy.callCount, 1, "Form isn't updated after validation")
+
+    // ---
+
     const result = spy.lastCall.args[0];
+
     assert.deepEqual(result.errors, {
       foo: "foo_error",
       bar: null,
