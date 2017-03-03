@@ -1,7 +1,14 @@
 {
   "name": "kefir-store",
-  "version": "0.0.1",
-  "description": "Basic boilerplate",
+  "version": "1.0.0",
+  "description": "Declarative syntax for combining streams which share state to each other",
+  "keywords": [
+    "kefir",
+    "stream",
+    "reactive",
+    "observable",
+    "store"
+  ],
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -20,9 +27,10 @@
     "clean": "rm -rf dist lib",
     "measure": "gzip -9 -k dist/* && pkgfiles --sort=name -f dist && rm dist/*.gz",
     "build": "npm run build:transpile && npm run build:bundle && npm run measure",
-    "build:bundle": "parallel-webpack --stats=0",
     "build:transpile": "babel src -d lib",
-    "prebuild": "npm run lint && npm test && npm run clean"
+    "build:bundle": "parallel-webpack --stats=0",
+    "prebuild": "npm run lint && npm test && npm run clean",
+    "prepublish": "npm test"
   },
   "author": "Jeron Diovis <void.jeron.diovis@gmail.com>",
   "license": "MIT",
