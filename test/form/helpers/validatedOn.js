@@ -11,9 +11,7 @@ describe("form :: helpers:", () => {
       FakeAsync(tick => {
         const VALIDATOR_TIMEOUT = 50
 
-        const validator = x => new Promise(res => {
-          setTimeout(res, VALIDATOR_TIMEOUT, x > 0 ? null : "Error")
-        })
+        const validator = asyncify(toValidator(x => x > 0))
 
         const form = Form([
           [ "setValue", "value", validator ]
@@ -69,13 +67,10 @@ describe("form :: helpers:", () => {
         FakeAsync(tick => {
           const VALIDATOR_TIMEOUT = 100
 
-          const validator = x => x > 0 ? null : "Error"
-          const asyncValidator = x => new Promise(res => {
-            setTimeout(res, VALIDATOR_TIMEOUT, validator(x))
-          })
+          const validator = toValidator(x => x > 0, ERROR_MSG)
 
           const form = Form([
-            [ "setFoo", "foo", asyncValidator ],
+            [ "setFoo", "foo", asyncify(validator) ],
             [ "setBar", "bar", validator ]
           ])
 
@@ -119,8 +114,8 @@ describe("form :: helpers:", () => {
           assert.deepEqual(
             spyValidated.getCall(0).args[0].errors,
             {
-              foo: "Error",
-              bar: "Error",
+              foo: ERROR_MSG,
+              bar: ERROR_MSG,
             },
             "wrong valid state after validation"
           )
@@ -140,9 +135,7 @@ describe("form :: helpers:", () => {
         FakeAsync(tick => {
           const VALIDATOR_TIMEOUT = 50
 
-          const validator = x => new Promise(res => {
-            setTimeout(res, VALIDATOR_TIMEOUT, x > 0 ? null : "Error")
-          })
+          const validator = asyncify(toValidator(x => x > 0))
 
           const form = Form([
             [ "setValue", "value", validator ]
@@ -184,7 +177,7 @@ describe("form :: helpers:", () => {
 
       it("when initial state is invalid", () => {
         const form = Form([
-          [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
+          [ "setValue", "value", toValidator(x => x > 0, "ERROR") ]
         ], {
           value: 0
         })
@@ -265,7 +258,7 @@ describe("form :: helpers:", () => {
 
     it("should accept form as stream", () => {
       const form$ = Form.asStream([
-        [ "setValue", "value", x => x > 0 ? null : "ERROR" ]
+        [ "setValue", "value", toValidator(x => x > 0, "ERROR") ]
       ], {
         value: 1
       })

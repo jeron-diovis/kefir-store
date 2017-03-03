@@ -2,10 +2,9 @@ import { Form } from "../../../src"
 
 describe("form :: validation:", () => {
   let validator
-  const ERROR_MSG = "ERROR"
 
   beforeEach(() => {
-    validator = x => x > 0 ? null : ERROR_MSG
+    validator = toValidator(x => x > 0, ERROR_MSG)
   })
 
   afterEach(() => {
@@ -20,11 +19,15 @@ describe("form :: validation:", () => {
       value: 0
     })
 
-    form.stream.onValue(() => {}) // activate
+    form.stream.onValue(noop) // activate
     form.handlers.setValue(42)
 
     assert.equal(validator.callCount, 1, "Validator is not called once")
-    assert.deepEqual(validator.lastCall.args, [ 42, { value: 0 } ], "validator does not receive proper arguments")
+    assert.deepEqual(
+      validator.lastCall.args,
+      [ 42, { value: 0 } ],
+      "validator does not receive proper arguments"
+    )
   })
 
 
@@ -104,7 +107,7 @@ describe("form :: validation:", () => {
 
       const form = Form([
         [ "setValue", reducer, [
-          x => x > 0 ? null : "Division by zero",
+          toValidator(x => x > 0, "Division by zero"),
           "value"
         ]],
       ], {

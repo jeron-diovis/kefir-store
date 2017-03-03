@@ -7,7 +7,7 @@ describe("collection reducer:", () => {
 
   it("helper should accept a function or string, and create a function", () => {
     assert.isFunction(listReducer("prop"), "does not accept string");
-    assert.isFunction(listReducer(() => {}), "does not accept function");
+    assert.isFunction(listReducer(noop), "does not accept function");
 
     assert.throws(
       () => listReducer(null),
@@ -92,7 +92,7 @@ describe("collection reducer:", () => {
 
     const store = Stream(
       [
-        [ subject.stream, listReducer(() => {}) ]
+        [ subject.stream, listReducer(noop) ]
       ],
       STATE
     )

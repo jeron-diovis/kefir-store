@@ -34,7 +34,7 @@ describe("basic stream:", () => {
         const test = (throws, input, label) => {
           assert[throws ? "throws" : "doesNotThrow"](
             () => Stream([
-              [ input, () => {} ]
+              [ input, noop ]
             ]),
             Error,
             /\[kefir-store\] Invalid input/,
@@ -72,7 +72,7 @@ describe("basic stream:", () => {
 
           // ---
 
-          stream.onValue(() => {})
+          stream.onValue(noop)
 
           const state$ = args[1]
           const spy = sinon.spy()

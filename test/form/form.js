@@ -126,7 +126,7 @@ describe("form :: base:", () => {
         [
           [ "setValue", $ => $.flatten(x => [ x, x ]) ],
           "value",
-          x => x > 0 ? null : "ERROR",
+          toValidator(x => x > 0, "ERROR"),
         ],
       ])
 
@@ -185,7 +185,7 @@ describe("form :: base:", () => {
           "setValue",
           reducer,
           [
-            x => x > 0 ? null : "ERROR",
+            toValidator(x => x > 0, "ERROR"),
             "value"
           ]
         ]

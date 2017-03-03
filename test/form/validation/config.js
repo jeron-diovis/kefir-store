@@ -3,17 +3,21 @@ import { Form } from "../../../src"
 describe("form :: validation :: validator config:", () => {
   it("should be a [ Function, { get: Function, set: Function, key: String } ]", () => {
     const options = {
-      get: () => {},
-      set: () => {},
+      get: noop,
+      set: noop,
       key: "",
     }
 
     const setup = options => () => {
       Form([
-        [ "setValue", () => {}, [
-          () => {},
-          options
-        ] ]
+        [
+          "setValue",
+          noop,
+          [
+            noop,
+            options,
+          ]
+        ]
       ])
     }
 
@@ -25,16 +29,22 @@ describe("form :: validation :: validator config:", () => {
 
   it("if reducer is a string, should be only a validator function", () => {
     assert.doesNotThrow(() => Form([
-      [ "setValue", "value", () => {} ]
+      [ "setValue", "value", noop ]
     ]))
 
     assert.throws(
       () => Form([
-        [ "setValue", "value", [ () => {}, {
-          get: () => {},
-          set: () => {},
-          key: "",
-        } ] ]
+        [
+          "setValue", "value",
+          [
+            noop,
+            {
+              get: noop,
+              set: noop,
+              key: "",
+            }
+          ]
+        ]
       ]),
       /When reducer is defined as a string, you should only define validation function/
     )
@@ -49,9 +59,11 @@ describe("form :: validation :: validator config:", () => {
         [
           [ "setValue", $ => $.merge(subj.stream) ],
           "value",
-          Kefir.constant($ => $.delay().map(([ value, state ]) => (
-            value === state.equalTo ? null : "ERROR"
-          )))
+          Kefir.constant(
+            $ => $.delay().map(([ value, state ]) => (
+              value === state.equalTo ? null : "ERROR"
+            ))
+          )
         ]
       ], {
         value: 1,
@@ -72,16 +84,15 @@ describe("form :: validation :: validator config:", () => {
 
   describe("options:", () => {
     let validator
-    const ERROR_MSG = "ERROR"
     const defaultOptions = {
-      get: () => {},
-      set: () => {},
+      get: noop,
+      set: noop,
       key: "value",
     };
     const cfg = arg => ({ ...defaultOptions, ...arg })
 
     beforeEach(() => {
-      validator = x => x > 0 ? null : ERROR_MSG
+      validator = toValidator(x => x > 0, ERROR_MSG)
     })
 
     afterEach(() => {
@@ -95,9 +106,12 @@ describe("form :: validation :: validator config:", () => {
 
           (state, value) => ({ ...state, value }),
 
-          [ validator, cfg({
-            key: "my_error"
-          }) ]
+          [
+            validator,
+            cfg({
+              key: "my_error"
+            }),
+          ]
         ]
       ], {
         value: 0
@@ -116,9 +130,12 @@ describe("form :: validation :: validator config:", () => {
 
           (state, value) => ({ ...state, value }),
 
-          [ validator, cfg({
-            set: (state, value) => ({ ...state, value: value * 2 })
-          }) ]
+          [
+            validator,
+            cfg({
+              set: (state, value) => ({ ...state, value: value * 2 })
+            }),
+          ]
         ]
       ], {
         value: 0
@@ -138,9 +155,12 @@ describe("form :: validation :: validator config:", () => {
 
           (state, [ prev_value, value ]) => ({ ...state, value, prev_value }),
 
-          [ validator, cfg({
-            get: state => state.prev_value,
-          }) ]
+          [
+            validator,
+            cfg({
+              get: state => state.prev_value,
+            }),
+          ]
         ]
       ], {
         value: 1,
@@ -160,7 +180,7 @@ describe("form :: validation :: validator config:", () => {
 
     describe("as string", () => {
       it("should be used as error key and as prop name for getter/setter", () => {
-        const validator = sinon.spy(x => x > 0 ? null : ERROR_MSG)
+        const validator = sinon.spy(toValidator(x => x > 0, ERROR_MSG))
 
         const form = Form([
           [

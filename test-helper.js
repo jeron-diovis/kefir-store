@@ -41,3 +41,36 @@ global.FakeAsync = cb => {
     clock.restore()
   }
 }
+
+// ---
+
+global.noop = () => {}
+
+// ---
+
+global.fmtJSON = x => JSON.stringify(x, null, 2)
+global.logJSON = x => {
+  console.log(fmtJSON(x))
+  return x
+}
+
+// ---
+
+global.asyncify = (fn, delay) => (...args) => new Promise(res => {
+  setTimeout(res, delay, fn(...args))
+})
+
+global.ERROR_MSG = "ERROR"
+
+global.toValidator = (predicate, msg = ERROR_MSG) =>
+  (...args) => {
+    if (predicate(...args)) {
+      return null
+    }
+
+    if (typeof msg === "function") {
+      return msg(...args)
+    }
+
+    return msg
+  }

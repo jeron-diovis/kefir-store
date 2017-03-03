@@ -44,9 +44,10 @@ describe("form :: validation :: async validators:", () => {
       const INPUT_TIMEOUT = 100
       const VALIDATOR_TIMEOUT = 50
 
-      const validator = x => new Promise(res => {
-        setTimeout(res, VALIDATOR_TIMEOUT, x % 2 === 0 ? null : `${x} is invalid`)
-      })
+      const validator = asyncify(toValidator(
+        x => x % 2 === 0,
+        x => `${x} is invalid`
+      ))
 
       const input$ = Kefir.sequentially(INPUT_TIMEOUT, [ 1, 2, 3 ])
 

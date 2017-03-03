@@ -37,7 +37,7 @@ describe("model :: input", () => {
 
       const setup = () => {
         model = Model([
-          [ [ "some", () => {} ], "value" ]
+          [ [ "some", noop ], "value" ]
         ])
       }
 
@@ -50,7 +50,7 @@ describe("model :: input", () => {
   it("should not allow duplicating handler names", () => {
     const setup = () => Model([
       [ "setValue", "value" ],
-      [ [ "setValue", () => {} ], "value" ]
+      [ [ "setValue", noop ], "value" ]
     ])
     assert.throws(setup, /Handler 'setValue' already exists/)
   })

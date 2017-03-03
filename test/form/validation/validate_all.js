@@ -1,8 +1,6 @@
 import { Form } from "../../../src"
 
 describe("form :: validation :: validate all", () => {
-  const toValidator = (test, msg) => (value, state) => test(value, state) ? null : msg
-
   it("should validate current form's state", () => {
     const form = Form([
       [ "setFoo", "foo", toValidator(x => x > 0, "foo_error") ],
@@ -38,7 +36,7 @@ describe("form :: validation :: validate all", () => {
       [
         [ "setValue", $ => $.merge(subj.stream) ],
         "value",
-        toValidator(x => x > 0, "error")
+        toValidator(x => x > 0)
       ],
     ])
 
