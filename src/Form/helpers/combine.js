@@ -1,21 +1,50 @@
+/* TODO: clean up this module */
+
 import Kefir from "kefir"
 import Subject from "../../lib/Subject"
 import * as F from "../../lib/func_utils"
 import toStream from "./toStream"
+import { is as isForm } from "./symbol"
 
 const isUndefined = x => x === undefined
 const isTrue = x => x === true
 
 const FORM_FIELDS = [ "state", "errors", "handlers", "status" ]
-const SPECIAL_HANDLERS = [ "validate", "reset" ]
-const SPECIAL_STATUSES = [ "isValidated", "isResetted" ]
+const META_HANDLERS = [ "validate", "reset" ]
+const META_STATUSES = [ "isValidated", "isResetted" ]
+
+const EMPTY_OBJECT = {}
+
+const DEFAULT_STATUS = {
+  isResetted: false,
+  isValidated: false,
+  isValid: true, // not undefined, explicitly valid
+}
 
 const combine = F.curry((keys, values) => {
   const form = FORM_FIELDS.reduce(
-    (memo, field) => {
-      memo[field] = keys.reduce(
-        (memo, form, idx) => {
-          memo[form] = values[idx][field]
+    (memo, fieldName) => {
+      memo[fieldName] = keys.reduce(
+        (memo, formName, idx) => {
+          const state = values[idx]
+
+          if (fieldName in state) {
+            memo[formName] = state[fieldName]
+          } else {
+            switch (fieldName) {
+              case "state":
+                memo[formName] = state
+                break;
+
+              case "status":
+                memo[formName] = DEFAULT_STATUS
+                break;
+
+              default:
+                memo[formName] = EMPTY_OBJECT
+            }
+          }
+
           return memo
         },
         {}
@@ -25,7 +54,7 @@ const combine = F.curry((keys, values) => {
     {}
   )
 
-  const statuses = F.pluck("status", values)
+  const statuses = F.pluck("status", values.filter(isForm))
   const isValid = F.pluck("isValid", statuses)
   Object.assign(form.status, {
     isValid: isValid.every(isUndefined) ? undefined : isValid.every(isTrue),
@@ -40,24 +69,34 @@ const combine = F.curry((keys, values) => {
 
 export default function combineForms(cfg) {
   const [ keys, forms ] = F.zip(...F.entries(cfg))
-  const combo$ = Kefir.combine(forms.map(toStream)).toProperty()
+
+  if (!forms.every(F.isStream)) {
+    throw new Error(`[kefir-store :: combine] You should pass only observables to 'combine' helper`)
+  }
+
+  const formsList$ = Kefir.combine(forms.map(toStream)).toProperty()
 
   const $flag = Subject($ => $.map(F.returnFalse).toProperty(F.returnTrue))
 
-  const combinedHandlers$ = combo$.take(1).map(F.pluck("handlers")).map(handlers =>
-    SPECIAL_HANDLERS.reduce(
-      (memo, key) => {
-        memo[key] = F.flow(
-          $flag.handler, // whenever special handler is called, set filtration flag to false
-          ...F.pluck(key, handlers)
-        )
-        return memo
-      },
-      {}
+  const combinedHandlers$ = formsList$.take(1)
+    .map(xs => xs.filter(isForm))
+    .map(F.pluck("handlers"))
+    .map(handlers =>
+      META_HANDLERS.reduce(
+        (memo, key) => {
+          memo[key] = F.flow(
+            $flag.handler, // whenever special handler is called, set filtration flag to false
+            ...F.pluck(key, handlers)
+          )
+          return memo
+        },
+        {}
+      )
     )
-  )
 
-  const forms$ = combo$.map(combine(keys))
+  const formsCount$ = formsList$.map(xs => xs.filter(isForm).length)
+
+  const combo$ = formsList$.map(combine(keys))
     .combine(
       combinedHandlers$,
       (form, handlers) => {
@@ -67,12 +106,12 @@ export default function combineForms(cfg) {
     ).toProperty()
 
   const aggregated$ = (
-    $flag.stream.changes().flatMapLatest(() =>
-      forms$.changes()
-        .bufferWithCount(keys.length)
+    formsCount$.sampledBy($flag.stream.changes()).flatMapLatest(limit =>
+      combo$.changes()
+        .bufferWithCount(limit)
         .map(x => x.pop())
         .map(x => {
-          SPECIAL_STATUSES.forEach(key => {
+          META_STATUSES.forEach(key => {
             // When special handler is called,
             // combine statuses from all forms
             x.status[key] = x.status[key].every(isTrue)
@@ -93,13 +132,13 @@ export default function combineForms(cfg) {
    * take the last one (combination of all of them),
    * and then unlock main stream again */
   return (
-    forms$
+    combo$
       .filterBy($flag.stream.merge(
         // when all forms has emitted value, unlock main stream
         aggregated$.map(F.returnTrue))
       )
       .map(x => {
-        SPECIAL_STATUSES.forEach(key => {
+        META_STATUSES.forEach(key => {
           // Special status can only be true when corresponding special handler is called.
           // In main stream it's always false.
           x.status[key] = false

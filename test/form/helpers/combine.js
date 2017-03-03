@@ -1,4 +1,5 @@
-import { Form } from "../../../src"
+import { Form, Model, Stream } from "../../../src"
+import _ from "lodash"
 
 describe("form :: helpers :: combine:", () => {
   it("should be a static function", () => {
@@ -7,9 +8,9 @@ describe("form :: helpers :: combine:", () => {
 
   it("should accept mapping object and create stream with each form field combined", () => {
     const combo$ = Form.combine({
-      f1: Form(),
-      f2: Form(),
-      f3: Form(),
+      f1: Form.asStream(),
+      f2: Form.asStream(),
+      f3: Form.asStream(),
     })
 
     assert.instanceOf(combo$, Kefir.Observable, "Combined form is not a stream")
@@ -52,9 +53,9 @@ describe("form :: helpers :: combine:", () => {
 
   it("should create own reset/validate handlers and own status values for combined form", () => {
     const combo$ = Form.combine({
-      f1: Form(),
-      f2: Form(),
-      f3: Form(),
+      f1: Form.asStream(),
+      f2: Form.asStream(),
+      f3: Form.asStream(),
     })
 
     assert.instanceOf(combo$, Kefir.Observable, "Combined form is not a stream")
@@ -75,9 +76,9 @@ describe("form :: helpers :: combine:", () => {
 
   it("should emit atomic updates on validation or resetting", () => {
     const combo$ = Form.combine({
-      f1: Form(),
-      f2: Form(),
-      f3: Form(),
+      f1: Form.asStream(),
+      f2: Form.asStream(),
+      f3: Form.asStream(),
     })
 
     let validate
@@ -110,9 +111,9 @@ describe("form :: helpers :: combine:", () => {
       let form
 
       const combo$ = Form.combine({
-        f1: Form(),
-        f2: Form(),
-        f3: Form(),
+        f1: Form.asStream(),
+        f2: Form.asStream(),
+        f3: Form.asStream(),
       })
 
       combo$.onValue(x => {
@@ -138,9 +139,9 @@ describe("form :: helpers :: combine:", () => {
       let form
 
       const combo$ = Form.combine({
-        f1: Form(),
-        f2: Form(),
-        f3: Form(),
+        f1: Form.asStream(),
+        f2: Form.asStream(),
+        f3: Form.asStream(),
       })
 
       combo$.onValue(x => {
@@ -165,9 +166,9 @@ describe("form :: helpers :: combine:", () => {
       let form
 
       const combo$ = Form.combine({
-        f1: Form(),
-        f2: Form(),
-        f3: Form(),
+        f1: Form.asStream(),
+        f2: Form.asStream(),
+        f3: Form.asStream(),
       })
 
       combo$.onValue(x => {
@@ -192,10 +193,10 @@ describe("form :: helpers :: combine:", () => {
       let form
 
       const combo$ = Form.combine({
-        f1: Form([
+        f1: Form.asStream([
           [ "setFoo", "foo" ]
         ]),
-        f2: Form(),
+        f2: Form.asStream(),
       })
 
       combo$.onValue(x => {
@@ -226,5 +227,127 @@ describe("form :: helpers :: combine:", () => {
 
       assert.equal(spy.callCount, 3, "form isn't updated 3 times")
     })
+  })
+
+  it("hybrid form", () => {
+    const combo$ = Form.combine({
+      form: Form.asStream(),
+      model: Model.asStream([
+        [ "setValue", "value" ]
+      ]),
+      stream: Stream(),
+    })
+
+    const spy = sinon.spy()
+    combo$.onValue(spy)
+
+    assert.equal(spy.callCount, 1, "Combined form does not emit initial state")
+
+    // ---
+
+    const result = spy.getCall(0).args[0]
+
+    const KEYS = [ "state", "errors", "handlers", "status" ]
+    const FORMS = [ "form", "model", "stream" ]
+
+    // ---
+
+    assert.deepEqual(Object.keys(result), KEYS, "Incomplete form fields list")
+
+    // ---
+    // Common fields
+
+    FORMS.forEach(key => {
+      assert.deepEqual(result.state[key], {}, `No state for '${key}'`)
+    })
+
+    FORMS.forEach(key => {
+      assert.deepEqual(result.errors[key], {}, `No errors for '${key}'`)
+    })
+
+    FORMS.forEach(key => {
+      assert.isObject(result.handlers[key], `No handlers for '${key}'`)
+      assert.isObject(result.status[key], `No status for '${key}'`)
+    })
+
+    // ---
+    // Handlers
+
+    assert.isFunction(result.handlers.form.reset, "No 'reset' handler for 'form'")
+    assert.isFunction(result.handlers.form.validate, "No 'validate' handler for 'form'")
+
+    assert.isFunction(result.handlers.model.setValue, "No 'setValue' handler for 'model'")
+
+    assert.deepEqual(result.handlers.stream, {}, "Wrong handlers 'stream'")
+
+    // ---
+    // Status
+
+    assert.deepEqual(
+      result.status.form,
+      {
+        isValid: undefined,
+        isValidated: false,
+        isResetted: false,
+      },
+      "wrong status for 'form'"
+    )
+
+    assert.deepEqual(
+      result.status.model,
+      {
+        isValid: true,
+        isValidated: false,
+        isResetted: false,
+      },
+      "wrong status for 'model'"
+    )
+
+    assert.deepEqual(
+      result.status.stream,
+      {
+        isValid: true,
+        isValidated: false,
+        isResetted: false,
+      },
+      "wrong status for 'stream'"
+    )
+
+
+    // ---
+    // Do update
+
+    result.handlers.model.setValue(42)
+
+    assert.equal(spy.callCount, 2, "Combined form does not emit on update")
+    assert.deepEqual(
+      spy.getCall(1).args[0].state,
+      {
+        form: {},
+        model: { value: 42 },
+        stream: {},
+      },
+      "wrong combined status after validation"
+    )
+
+    // ---
+
+    result.handlers.validate()
+
+    assert.equal(spy.callCount, 3, "Combined form does not emit on validation")
+    assert.deepEqual(
+      _.pick(
+        spy.getCall(2).args[0].status,
+        [
+          "isValid", "isValidated", "isResetted"
+        ]
+      ),
+      {
+        isValid: true,
+        isValidated: true,
+        isResetted: false,
+      },
+      "wrong combined status after validation"
+    )
   })
 })

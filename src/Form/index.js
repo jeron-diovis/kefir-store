@@ -33,6 +33,7 @@ const zipFormParts = (state$, errors$, status$) => (
     ],
     (state, errors, status) => ({ state, errors, status })
   )
+  .map(helpers.mark)
 )
 
 // ---
@@ -55,6 +56,7 @@ class Form extends Model {
         isResetted: false,
       },
     }))
+    .map(helpers.mark)
   }
 
   _init(...args) {
@@ -166,11 +168,23 @@ class Form extends Model {
  */
 
 /**
+ * @callback KefirStore_Form.is
+ * @return {Boolean}
+ */
+
+/**
  * @type KefirStore_Form
  */
 const of = Form.of.bind(Form)
 
-Object.assign(of, helpers)
+const PUBLIC_HELPERS = [
+  "validOn", "validatedOn",
+  "combine",
+  "toStream",
+]
+
+PUBLIC_HELPERS.forEach(k => { of[k] = helpers[k] })
+
 of.asStream = F.flow(of, of.toStream)
 
 // ---
