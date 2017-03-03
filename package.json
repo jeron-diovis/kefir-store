@@ -19,7 +19,7 @@
     "start": "parallelshell 'npm run test:watch' 'npm run lint:watch'",
     "clean": "rm -rf dist lib",
     "build": "npm run build:transpile && npm run build:bundle",
-    "build:bundle": "webpack",
+    "build:bundle": "parallel-webpack --stats=0",
     "build:transpile": "babel src -d lib",
     "prebuild": "npm run lint && npm test && npm run clean"
   },
@@ -41,6 +41,7 @@
     "immutable": "^3.8.1",
     "mocha": "^3.1.0",
     "mock-promises": "^0.7.0",
+    "parallel-webpack": "^1.6.1",
     "parallelshell": "^2.0.0",
     "sinon": "^1.17.6",
     "sinon-as-promised": "^4.0.2",
