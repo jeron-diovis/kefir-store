@@ -39,9 +39,10 @@ module.exports = createVariants(
         JSON.parse(
           fs.readFileSync("package.json")
         ).dependencies
-      ).concat(
-        /^lodash($|\/.+)/
-      )
+      ).concat([
+        /^lodash($|\/.+)/,
+        /^babel-runtime($|\/.+)/,
+      ])
     ),
 
     module: {
