@@ -18,7 +18,8 @@
     "lint:watch": "npm run lint -- -w",
     "start": "parallelshell 'npm run test:watch' 'npm run lint:watch'",
     "clean": "rm -rf dist lib",
-    "build": "npm run build:transpile && npm run build:bundle",
+    "measure": "gzip -9 -k dist/* && pkgfiles --sort=name -f dist && rm dist/*.gz",
+    "build": "npm run build:transpile && npm run build:bundle && npm run measure",
     "build:bundle": "parallel-webpack --stats=0",
     "build:transpile": "babel src -d lib",
     "prebuild": "npm run lint && npm test && npm run clean"
@@ -43,6 +44,7 @@
     "mock-promises": "^0.7.0",
     "parallel-webpack": "^1.6.1",
     "parallelshell": "^2.0.0",
+    "pkgfiles": "^2.3.2",
     "sinon": "^1.17.6",
     "sinon-as-promised": "^4.0.2",
     "webpack": "^1.13.2",
