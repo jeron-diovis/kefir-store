@@ -63,6 +63,70 @@ describe("form :: helpers:", () => {
         )
       })
     })
+
+    describe("concurrency:", () => {
+      it("should not be interrupted by input", () => {
+        FakeAsync(tick => {
+          const VALIDATOR_TIMEOUT = 100
+
+          const validator = x => x > 0 ? null : "Error"
+          const asyncValidator = x => new Promise(res => {
+            setTimeout(res, VALIDATOR_TIMEOUT, validator(x))
+          })
+
+          const form = Form([
+            [ "setFoo", "foo", asyncValidator ],
+            [ "setBar", "bar", validator ]
+          ])
+
+          const $validationTriggerEvent = Subject()
+
+          const spyForm = sinon.spy()
+          const spyValidated = sinon.spy()
+
+          form.stream.changes().onValue(spyForm)
+
+          Form.validatedOn(form, $validationTriggerEvent.stream).onValue(spyValidated)
+
+          // ---
+
+          $validationTriggerEvent.handler()
+
+          form.handlers.setBar(1)
+
+          assert.equal(spyForm.callCount, 1)
+          assert.equal(spyValidated.callCount, 0, "validated state updated before validation completed")
+
+          // ---
+
+          tick(VALIDATOR_TIMEOUT)
+
+          assert.equal(spyForm.callCount, 2)
+          assert.deepEqual(
+            spyForm.getCall(0).args[0].errors,
+            {
+              bar: null,
+            },
+            "wrong valid state after setting value"
+          )
+
+          assert.equal(spyValidated.callCount, 1, "validated state isn't updated after validation completed")
+
+          /* `bar` is invalid, because it was invalid when validation started,
+           * and later update was not applied to validated state.
+           * Have no idea whether it's possible to solve this problem automatically.
+           * So far this behaviour is "by spec". */
+          assert.deepEqual(
+            spyValidated.getCall(0).args[0].errors,
+            {
+              foo: "Error",
+              bar: "Error",
+            },
+            "wrong valid state after validation"
+          )
+        })
+      })
+    })
   })
 
 
