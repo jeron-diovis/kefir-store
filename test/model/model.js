@@ -11,23 +11,23 @@ describe("model :: base", () => {
 
   // ---
 
-  const testModelStream = model$ => {
-    assert.instanceOf(model$, Kefir.Observable, "Stream model is not a stream")
+  describe("helpers: ", () => {
+    const testModelStream = model$ => {
+      assert.instanceOf(model$, Kefir.Observable, "Stream model is not a stream")
 
-    const spy = sinon.spy()
-    model$.onValue(spy)
+      const spy = sinon.spy()
+      model$.onValue(spy)
 
-    const data = spy.lastCall.args[0]
+      const data = spy.lastCall.args[0]
 
-    assert.property(data, "state", "Stream data has no 'state' property")
-    assert.deepEqual(data.state, { value: "initial value" }, "State is wrong")
+      assert.property(data, "state", "Stream data has no 'state' property")
+      assert.deepEqual(data.state, { value: "initial value" }, "State is wrong")
 
-    assert.deepProperty(data, "handlers.setValue", "Stream data has no handlers")
-    assert.isFunction(data.handlers.setValue, "Named handler is not created")
-  }
+      assert.deepProperty(data, "handlers.setValue", "Stream data has no handlers")
+      assert.isFunction(data.handlers.setValue, "Named handler is not created")
+    }
 
-  describe("asStream", () => {
-    it("should be an Observable<{ state, handlers }>", () => {
+    it("asStream: should be an Observable<{ state, handlers }>", () => {
       assert.isFunction(Model.asStream, "Model.asStream method does not exist")
 
       const model = Model.asStream(
@@ -37,10 +37,8 @@ describe("model :: base", () => {
 
       testModelStream(model)
     })
-  })
 
-  describe("toStream", () => {
-    it("should convert model object into Observable", () => {
+    it("toStream: should convert model object into Observable", () => {
       assert.isFunction(Model.toStream, "Model.toStream method does not exist")
 
       const model = Model.toStream(Model(
