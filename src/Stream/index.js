@@ -46,29 +46,8 @@ class Stream {
    * @protected
    */
   _createInputStream(state$, [ input, reducer ]) {
-    let stream, init = F.id
-
-    if (F.isStream(input)) {
-      stream = input
-    } else {
-      ({ stream, init } = input)
-    }
-
-    // State stream MUST be passive,
-    // to make sure that if you somehow combine input with state,
-    // you'll never fall into infinite loop, when updated state triggers new updates.
-    const passiveState$ = state$.sampledBy(stream)
-
-    const modifiedInput$ = init(stream, passiveState$)
-
     return state$.sampledBy(
-      // allow for initializer to don't return value
-      // (if it's used to add some side-effects)
-      (modifiedInput$ || stream)
-        // Always omit any current value.
-        // Because input represents *stream of changes*, not state.
-        .changes(),
-
+      S.initInputStream(input, state$),
       reducer
     )
   }

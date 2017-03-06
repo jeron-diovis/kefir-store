@@ -38,7 +38,7 @@ const splitByValidity = F.flow(
 // ---
 
 export default F.curry((state$, { input, reducer, validator }) => {
-  const input$ = input.init(input.stream, state$)
+  const input$ = S.initInputStream(input, state$)
 
   // Each input value is validated.
   // Each value should be emitted synchronously with validation result for it.
