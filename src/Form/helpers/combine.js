@@ -28,7 +28,7 @@ const combine = F.curry((keys, values) => {
         (memo, formName, idx) => {
           const state = values[idx]
 
-          if (fieldName in state) {
+          if (state != null && (fieldName in state)) {
             memo[formName] = state[fieldName]
           } else {
             switch (fieldName) {
