@@ -98,7 +98,7 @@ describe("basic stream:", () => {
             [
               [
                 subj.stream,
-                (input$, state$) => Kefir.combine(
+                (input$, state$) => Kefir.zip(
                   // note that both streams combined as active,
                   // but values from state$ do not cause infinite loop
                   [ input$, state$ ],
@@ -116,10 +116,20 @@ describe("basic stream:", () => {
           stream.changes().onValue(spy)
 
           subj.handler(2)
+          subj.handler(3)
+
+          assert.equal(spy.callCount, 2, "State isn't updated 2 times")
 
           assert.deepEqual(
             spy.getCall(0).args[0],
-            { value: 3 }
+            { value: 3 },
+            "Wrong first result"
+          )
+
+          assert.deepEqual(
+            spy.getCall(1).args[0],
+            { value: 6 },
+            "Wrong second result"
           )
         })
       })
