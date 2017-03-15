@@ -27,29 +27,6 @@ describe("form :: validation :: validator config:", () => {
     })
   })
 
-  it("if reducer is a string, should be only a validator function", () => {
-    assert.doesNotThrow(() => Form([
-      [ "setValue", "value", noop ]
-    ]))
-
-    assert.throws(
-      () => Form([
-        [
-          "setValue", "value",
-          [
-            noop,
-            {
-              get: noop,
-              set: noop,
-              key: "",
-            }
-          ]
-        ]
-      ]),
-      /When reducer is defined as a string, you should only define validation function/
-    )
-  })
-
 
   it("should support validator as stream", () => {
     FakeAsync(tick => {

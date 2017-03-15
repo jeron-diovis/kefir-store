@@ -46,6 +46,13 @@ function ensureHandlersValid(handlers) {
   return handlers
 }
 
+const dummyValidator = {
+  ap: F.map(F.constant(undefined)),
+  getFromState: F.id,
+  setError: F.id,
+  setInvalid: F.id,
+}
+
 /**
  * @param {Array|Function|Observable<Function>} x
  * @param {undefined|{ set: Function, get: Function, key: String }} opts
@@ -53,42 +60,32 @@ function ensureHandlersValid(handlers) {
  */
 function parseValidator(x, opts) {
   if (x === undefined) {
-    return {
-      ap: F.map(F.constant(undefined)),
-      getFromState: F.id,
-      setError: F.id,
-      setInvalid: F.id,
-    }
+    return dummyValidator
   }
 
-  let validator = x
+  let result = x
 
   // ---
 
-  if (Array.isArray(validator)) {
-    if (opts !== undefined) {
-      throw new Error(`[kefir-store :: form] Validation config.
-        When reducer is defined as a string, you should only define validation function.
-        Options will be created automatically.
-        Current: ${JSON.stringify(opts)}
-      `)
-    }
+  if (Array.isArray(result)) {
+    const [ first, second ] = result
 
-    [ validator, opts ] = validator
+    result = first
 
-    if (F.isString(opts)) {
-      opts = createValidatorOptionsFromProp(opts)
+    opts = {
+      ...opts,
+      ...(!F.isString(second) ? second : createValidatorOptionsFromProp(second)),
     }
   }
 
   // ---
 
-  validator = toReducerStream(validator)
+  result = toReducerStream(result)
 
-  if (!F.isStream(validator)) {
+  if (!F.isStream(result)) {
     throw new Error(`[kefir-store :: form] Validation config.
       Validator must be a function or an Observable.
-      Current: ${JSON.stringify(validator)}
+      Current: ${JSON.stringify(result)}
     `)
   }
 
@@ -114,7 +111,7 @@ function parseValidator(x, opts) {
   // ---
 
   return {
-    ap: toErrorStream(validator),
+    ap: toErrorStream(result),
     getFromState: opts.get,
     setInvalid: opts.set,
     setError: CONFIG.reducer(opts.key),
