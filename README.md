@@ -65,12 +65,12 @@ Stream([
 
 Package exports following functions:
 
-* [Stream](docs/Stream) – basic entity. **Start reading here.**
-* [Model](docs/Model) – Stream + ability to push to it imperatively. 
-* [Form](docs/Form) – Model + validation. 
-* [Subject](docs/Subject) – tiny wrapper around [kefir-bus](https://www.npmjs.com/package/kefir-bus). 
-* [listReducer](docs/collections) – helper to deal with collections in state.
-* [setConfig](docs/configuration) – allows to override some parts of global behaviour.
+* [Stream](/docs/Stream.md) – basic entity. **Start reading here.**
+* [Model](/docs/Model.md) – Stream + ability to push to it imperatively. 
+* [Form](/docs/Form.md) – Model + validation. 
+* [Subject](/docs/Subject.md) – tiny wrapper around [kefir-bus](https://www.npmjs.com/package/kefir-bus). 
+* [listReducer](/docs/listReducer.md) – helper to deal with collections in state.
+* [setConfig](/docs/configuration.md) – allows to override some parts of global behaviour.
 
 ## How big is it?
 

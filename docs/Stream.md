@@ -73,9 +73,9 @@ Because very often we need to just update a single field in state, there is a sh
 
 "FP version" means that it will do immutable updates. 
 Also, thanks to Lodash, as bonus we get ability to easily update nested fields: `[ input$, "foo.bar.baz" ]`.  
-If you don't like this (or just don't like how `_.set` does it), you can change this globally using [library config](/docs/configuration). 
+If you don't like this (or just don't like how `_.set` does it), you can change this globally using [library config](/docs/configuration.md). 
 
-Also, there is a [helper](/docs/collections) to create reducers, which update certain items in collection.
+Also, there is a [helper](/docs/listReducer.md) to create reducers, which update certain items in collection.
 
 ### Input
 
@@ -92,10 +92,10 @@ This is what `InputInitializer` is for. Getting stream of patches and stream of 
 > N.B.: current state stream here is **passive** – it will emit [only and only when new input value arrives](https://rpominov.github.io/kefir/#obs-sampled-by). 
 This means, you can be sure that you'll never fall into infinite loop when updating state causes new updates.
 
-> **[!]** [Learn how to properly combine input and state streams](/docs/caveats#Combining-streams-in-InputInitializer) 
+> **[!]** [Learn how to properly combine input and state streams](/docs/caveats.md#Combining-streams-in-InputInitializer) 
 
 ---
 
 ## Further docs
-* [Model](/docs/Model) 
-* [Form](/docs/Form)
+* [Model](/docs/Model.md) 
+* [Form](/docs/Form.md)

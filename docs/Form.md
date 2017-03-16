@@ -1,6 +1,6 @@
 # Form
 
-#### Inherits: [Model](/docs/Model)
+#### Inherits: [Model](/docs/Model.md)
 
 `Form` is about validation – meaning not just filtering out wrong values, but gathering validation results for further usage (like displaying to user).
 
@@ -18,7 +18,7 @@ That is, besides state, we have a set of error messages and validity status. Thi
 
 ## API
 
-> for types not described here see [Stream API](/docs/Stream#API) and [Model API](/docs/Model#API)
+> for types not described here see [Stream API](/docs/Stream.md#API) and [Model API](/docs/Model.md#API)
 
 #### `Form(config: Array.<FormField> [, Seed]): FormObject`
 
@@ -194,7 +194,7 @@ Validator options are responsible for 3 things:
 
 Describes how to write validation result to `errors` object.
 
-Setter will be created from string by the same logic as Reducer (see [details about Stream](/docs/Stream#some-details)).
+Setter will be created from string by the same logic as Reducer (see [details about Stream](/docs/Stream.md#some-details)).
 
 #### `set`: Function (state, patch) -> new_state
 
@@ -291,7 +291,7 @@ Form([
 
 Validator is supposed to return an error message. If nothing returned, value is considered valid.
 
-By default, `null` and `undefined` considered as "nothing", and everything else as error. You may change this using [library config](/docs/configuration).
+By default, `null` and `undefined` considered as "nothing", and everything else as error. You may change this using [library config](/docs/configuration.md).
 
 ### Async validation
 
@@ -303,7 +303,7 @@ Uncaught errors in Promise will be converted to string and used as error message
 
 ### Form.asStream, Form.toStream
 
-Exactly the same as in [`Model`](/docs/Model#some-details).
+Exactly the same as in [`Model`](/docs/Model.md#some-details).
 
 ### Form.validatedOn, Form.validOn
 
@@ -345,11 +345,11 @@ decorate(({ onSubmit }) => (
 
 ### Form.combine
 
-This helper combines multiple streams into a `FormStream` (see [types definitions above](/docs/Form#API)).
+This helper combines multiple streams into a `FormStream` (see [types definitions above](/docs/Form.md#API)).
 
 It has two main responsibilities:
 
-* maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form#API)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
+* maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form.md#API)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
 
 * keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it still will emit only once: when all parts emit their values.
  

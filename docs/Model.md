@@ -1,6 +1,6 @@
 # Model
 
-#### Inherits: [Stream](/docs/Stream)
+#### Inherits: [Stream](/docs/Stream.md)
 
 As you may notice, `Stream` doesn't care about where input values come from. It only combines them.
 
@@ -12,7 +12,7 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 ## API
 
-> for types not described here see [Stream API](/docs/Stream#API)
+> for types not described here see [Stream API](/docs/Stream.md#API)
 
 #### `Model(config: Array.<ModelField> [, Seed]): ModelObject`
 
@@ -129,4 +129,4 @@ decorate(({ state, handlers }) => (
 Just handy helper to "pack" already created model into Observable.
 
 ## Further docs
-* [Form](/docs/Form)
+* [Form](/docs/Form.md)
