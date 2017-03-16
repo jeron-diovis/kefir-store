@@ -12,7 +12,7 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 ## API
 
-> for types not described here see [Stream API](/docs/Stream.md#API)
+> for types not described here see [Stream API](/docs/Stream.md#api)
 
 #### `Model(config: Array.<ModelField> [, Seed]): ModelObject`
 

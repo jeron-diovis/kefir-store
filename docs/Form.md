@@ -18,7 +18,7 @@ That is, besides state, we have a set of error messages and validity status. Thi
 
 ## API
 
-> for types not described here see [Stream API](/docs/Stream.md#API) and [Model API](/docs/Model.md#API)
+> for types not described here see [Stream API](/docs/Stream.md#api) and [Model API](/docs/Model.md#api)
 
 #### `Form(config: Array.<FormField> [, Seed]): FormObject`
 
@@ -345,11 +345,11 @@ decorate(({ onSubmit }) => (
 
 ### Form.combine
 
-This helper combines multiple streams into a `FormStream` (see [types definitions above](/docs/Form.md#API)).
+This helper combines multiple streams into a `FormStream` (see [types definitions above](/docs/Form.md#api)).
 
 It has two main responsibilities:
 
-* maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form.md#API)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
+* maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form.md#api)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
 
 * keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it still will emit only once: when all parts emit their values.
  
