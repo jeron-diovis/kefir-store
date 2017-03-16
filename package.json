@@ -29,8 +29,7 @@
     "build": "npm run build:transpile && npm run build:bundle && npm run measure",
     "build:transpile": "babel src -d lib",
     "build:bundle": "parallel-webpack --stats=0",
-    "prebuild": "npm run lint && npm test && npm run clean",
-    "prepublish": "npm test"
+    "prebuild": "npm run lint && npm test && npm run clean"
   },
   "author": "Jeron Diovis <void.jeron.diovis@gmail.com>",
   "license": "MIT",
