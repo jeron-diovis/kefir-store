@@ -92,7 +92,7 @@ This is what `InputInitializer` is for. Getting stream of patches and stream of 
 > N.B.: current state stream here is **passive** – it will emit [only and only when new input value arrives](https://rpominov.github.io/kefir/#obs-sampled-by). 
 This means, you can be sure that you'll never fall into infinite loop when updating state causes new updates.
 
-> **[!]** [Learn how to properly combine input and state streams](/docs/caveats.md#Combining-streams-in-InputInitializer) 
+> **[!]** [Learn how to properly combine input and state streams](/docs/caveats.md#combining-streams-in-inputinitializer) 
 
 ---
 
