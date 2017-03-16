@@ -307,7 +307,7 @@ Exactly the same as in [`Model`](/docs/Model.md#some-details).
 
 ### Form.validatedOn, Form.validOn
 
-Helpers to call `validate` handler in response on events from another stream. They are added because one the most common use-cases is validate entire form before submit and prevent submit if it's invalid.
+Helpers to call `validate` handler in response on events from another stream. They are added because one of the most common use-cases is to validate entire form before submit and prevent submit if it's invalid.
 
 The difference between these two methods is following:
  
