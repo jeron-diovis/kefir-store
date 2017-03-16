@@ -40,7 +40,7 @@ describe("collection reducer:", () => {
     );
   })
 
-  it("should pass entire state as 3-rd argument to reducer", () => {
+  it("should pass entire state and index as 3-rd and 4-th arguments to reducer", () => {
     const subject = Subject()
 
     const reducer = sinon.spy();
@@ -73,7 +73,7 @@ describe("collection reducer:", () => {
     STATE.forEach((x, i) => {
       assert.deepEqual(
         reducer.getCall(i).args,
-        [ x, PAYLOAD, STATE ],
+        [ x, PAYLOAD, STATE, i ],
         "reducer does not receive proper args"
       )
     })
