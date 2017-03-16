@@ -5,10 +5,10 @@ In general, this feature was intended to allow integration of this lib with `Imm
 So far, you can use `setConfig` to configure following options:
 
 * `reducer: Function String -> (state, patch) -> new_state` – describes how to create a reducer function from a string. 
-See [Stream details](/docs/Stream#some-details) for more information.
+See [Stream details](/docs/Stream.md#some-details) for more information.
 By default a FP version of [`_.set`](https://lodash.com/docs/4.17.4#set) helper is used.
 
-* `isNotValidationError: Function Any -> Bool` – describes which values, returned from Form validators, are considered "valid". See [Form details](/docs/Form#some-details) – section _**"Validator function"**_.
+* `isNotValidationError: Function Any -> Bool` – describes which values, returned from Form validators, are considered "valid". See [Form details](/docs/Form.md#some-details) – section _**"Validator function"**_.
 By default it is `x => x == null`
 
 ## Example
