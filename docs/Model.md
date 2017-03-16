@@ -69,7 +69,7 @@ Model.toStream(model).observe(x => console.log(x))
 
 In addition to `Stream` features, `Model` allows to pass a string in place of Observable as input. 
 
-In that case, [Subject](docs/Subject) will created internally and used as input stream. And that string will be used as name for subject's handler.
+In that case, [Subject](/docs/Subject.md) will created internally and used as input stream. And that string will be used as name for subject's handler.
 
 You can modify created stream using `InputInitializer` function.
 
