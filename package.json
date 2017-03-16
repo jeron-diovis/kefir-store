@@ -1,7 +1,7 @@
 {
   "name": "kefir-store",
   "version": "1.0.0",
-  "description": "Declarative syntax for combining streams which share state to each other",
+  "description": "Observable store with handy declarative syntax",
   "keywords": [
     "kefir",
     "stream",
