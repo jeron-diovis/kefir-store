@@ -104,7 +104,7 @@ Important feature which `Form` provides is atomic updates. It is guaranteed that
 
 ### `status.isResettted`, `status.isValidated`
 
-These statuses will be set to `true` only and only in response to call of corresponding handler (see _**"Reserved handlers"**_ section below). Any other update will reset them to `false`.
+These statuses will be set to `true` only and only in response to call of corresponding handler (see ["Reserved handlers"](/docs/Form.md#reserved-handlers) section below). Any other update will reset them to `false`.
 
 ### Reserved handlers
 
@@ -132,7 +132,7 @@ I.e., in response to call of this handler form always will emit following:
 Validates *current state*, i.e. each field which has validator.
 
 > Note the difference: it validates not the *last value from corresponding input*, but value which is currently set in state. 
-See _**"Validator options"**_ section below.
+See ["Validator options"](/docs/Form.md#validator-options)section below.
 
 ```js
 const validateNumber = x => x > 0 ? null : "not positive number"
