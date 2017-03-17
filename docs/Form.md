@@ -194,7 +194,7 @@ Validator options are responsible for 3 things:
 
 Describes how to write validation result to `errors` object.
 
-Setter will be created from string by the same logic as Reducer (see [details about Stream](/docs/Stream.md#some-details)).
+Setter will be created from string by the same logic as [Reducer](/docs/Stream.md#reducer).
 
 #### `set`: Function (state, patch) -> new_state
 
