@@ -351,7 +351,7 @@ It has two main responsibilities:
 
 * maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form.md#api)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
 
-* keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it still will emit only once: when all parts emit their values.
+* keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it will emit one aggregated result, when all parts has emit their values.
  
 ```js
 
