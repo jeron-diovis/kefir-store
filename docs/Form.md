@@ -90,7 +90,7 @@ form.handlers.setEmail("some_string")
 */
 ```
 
-> Note that invalid value is still saved in state. See "Validator options" section below.
+> Note that invalid value is still saved in state. See ["Validator options"](/docs/Form.md#validator-options) section below.
 
 ## Some details
 
