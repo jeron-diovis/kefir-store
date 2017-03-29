@@ -54,7 +54,7 @@
     "pkgfiles": "^2.3.2",
     "sinon": "^1.17.7",
     "sinon-as-promised": "^4.0.2",
-    "webpack": "^2.2.1",
+    "webpack": "^1.14.0",
     "webpack-error-notification": "^0.1.6",
     "webpack-info-plugin": "^0.1.0"
   },
