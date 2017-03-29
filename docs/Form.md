@@ -90,7 +90,7 @@ form.handlers.setEmail("some_string")
 */
 ```
 
-> Note that invalid value is still saved in state. See "Validator options" section below.
+> Note that invalid value is still saved in state. See ["Validator options"](/docs/Form.md#validator-options) section below.
 
 ## Some details
 
@@ -104,7 +104,7 @@ Important feature which `Form` provides is atomic updates. It is guaranteed that
 
 ### `status.isResettted`, `status.isValidated`
 
-These statuses will be set to `true` only and only in response to call of corresponding handler (see _**"Reserved handlers"**_ section below). Any other update will reset them to `false`.
+These statuses will be set to `true` only and only in response to call of corresponding handler (see ["Reserved handlers"](/docs/Form.md#reserved-handlers) section below). Any other update will reset them to `false`.
 
 ### Reserved handlers
 
@@ -132,7 +132,7 @@ I.e., in response to call of this handler form always will emit following:
 Validates *current state*, i.e. each field which has validator.
 
 > Note the difference: it validates not the *last value from corresponding input*, but value which is currently set in state. 
-See _**"Validator options"**_ section below.
+See ["Validator options"](/docs/Form.md#validator-options)section below.
 
 ```js
 const validateNumber = x => x > 0 ? null : "not positive number"
@@ -194,7 +194,7 @@ Validator options are responsible for 3 things:
 
 Describes how to write validation result to `errors` object.
 
-Setter will be created from string by the same logic as Reducer (see [details about Stream](/docs/Stream.md#some-details)).
+Setter will be created from string by the same logic as [Reducer](/docs/Stream.md#reducer).
 
 #### `set`: Function (state, patch) -> new_state
 
@@ -307,7 +307,7 @@ Exactly the same as in [`Model`](/docs/Model.md#some-details).
 
 ### Form.validatedOn, Form.validOn
 
-Helpers to call `validate` handler in response on events from another stream. They are added because one the most common use-cases is validate entire form before submit and prevent submit if it's invalid.
+Helpers to call `validate` handler in response on events from another stream. They are added because one of the most common use-cases is to validate entire form before submit and prevent submit if it's invalid.
 
 The difference between these two methods is following:
  
@@ -351,7 +351,7 @@ It has two main responsibilities:
 
 * maintain a `FormShape` for data in stream (see [types definitions above](/docs/Form.md#api)): whatever you combine, you'll always have an object with `state`, `errors` and `status` fields in resulting stream.
 
-* keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it still will emit only once: when all parts emit their values.
+* keep atomicity on resetting / validating: if you combine several forms and call `reset` / `validate` handler on combined stream, it will emit one aggregated result, when all parts has emit their values.
  
 ```js
 
