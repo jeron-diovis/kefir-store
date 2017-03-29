@@ -1,4 +1,5 @@
 import { Stream, listReducer } from "../src"
+import mapValues from "lodash/mapValues";
 
 describe("collection reducer:", () => {
   it("should provide 'listReducer' helper", () => {
@@ -21,7 +22,7 @@ describe("collection reducer:", () => {
     const payload = { query: {}, data: undefined }
     assert.throws(
       () => reducer({}, payload),
-      /Expected state to have 'map' method/
+      /\.map is not a function/
     );
 
     assert.doesNotThrow(
@@ -175,7 +176,7 @@ describe("collection reducer:", () => {
     };
 
     const mapper = sinon.spy((fn, xs) => {
-      xs.forEach(fn);
+      mapValues(xs, fn);
       return xs;
     })
 
@@ -187,10 +188,10 @@ describe("collection reducer:", () => {
         ]
       ],
 
-      [
-        { value: 1 },
-        { value: 2 },
-      ]
+      {
+        foo: { value: 1 },
+        bar: { value: 2 },
+      }
     )
 
     const spy = sinon.spy()
@@ -205,10 +206,10 @@ describe("collection reducer:", () => {
 
     assert.deepEqual(
       spy.getCall(1).args[0],
-      [
-        { value: 42 },
-        { value: 2 },
-      ],
+      {
+        foo: { value: 42 },
+        bar: { value: 2 },
+      },
       "final state is wrong"
     )
 

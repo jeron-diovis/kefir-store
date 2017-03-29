@@ -31,19 +31,10 @@ function ensureValidInput(x) {
   }
 }
 
-function ensureValidState(x) {
-  if (!F.isFunction(x.map)) {
-    throw new Error(`[kefir-store :: listReducer]
-      Expected state to have 'map' method. 
-    `)
-  }
-}
-
 export default (x, map = F.map) => {
   const reducer = parseReducer(x)
 
   return (state, arg) => {
-    ensureValidState(state)
     ensureValidInput(arg)
     const matches = iteratee(arg.query)
     return map(
