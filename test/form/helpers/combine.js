@@ -135,7 +135,7 @@ describe("form :: helpers :: combine:", () => {
       assert.isTrue(spy.getCall(3).args[0].status.isValid)
     })
 
-    it("isValidated: should only be true when entire form is validated", () => {
+    it("isValidated: should only be true when entire form is validated", () => FakeAsync(tick => {
       let form
 
       const combo$ = Form.combine({
@@ -149,20 +149,24 @@ describe("form :: helpers :: combine:", () => {
       })
 
       const spy = sinon.spy()
-      combo$.onValue(spy)
+      combo$.changes().onValue(spy)
 
       form.handlers.f1.validate()
       form.handlers.f2.validate()
       form.handlers.f3.validate()
+      tick()
 
-      assert.isFalse(spy.getCall(3).args[0].status.isValidated)
+      assert.equal(spy.callCount, 3, "combo form didn't emit after validating each particular form")
+      assert.isFalse(spy.getCall(2).args[0].status.isValidated, "isValidated isn't false after running validators on particular forms")
 
       form.handlers.validate()
+      tick()
 
-      assert.isTrue(spy.getCall(4).args[0].status.isValidated)
-    })
+      assert.equal(spy.callCount, 4, "combo form didn't emit after full validation")
+      assert.isTrue(spy.getCall(3).args[0].status.isValidated, "isValidated isn't true after running validation on entire form")
+    }))
 
-    it("isResetted: should only be true when entire form is resetted", () => {
+    it("isResetted: should only be true when entire form is resetted", () => FakeAsync(tick => {
       let form
 
       const combo$ = Form.combine({
@@ -176,18 +180,22 @@ describe("form :: helpers :: combine:", () => {
       })
 
       const spy = sinon.spy()
-      combo$.onValue(spy)
+      combo$.changes().onValue(spy)
 
       form.handlers.f1.reset()
       form.handlers.f2.reset()
       form.handlers.f3.reset()
+      tick()
 
-      assert.isFalse(spy.getCall(3).args[0].status.isResetted)
+      assert.equal(spy.callCount, 3, "combo form didn't emit after resetting each particular form")
+      assert.isFalse(spy.getCall(2).args[0].status.isResetted, "isResetted isn't false after running reset on particular forms")
 
       form.handlers.reset()
+      tick()
 
-      assert.isTrue(spy.getCall(4).args[0].status.isResetted)
-    })
+      assert.equal(spy.callCount, 4, "combo form didn't emit after full reset")
+      assert.isTrue(spy.getCall(3).args[0].status.isResetted, "isResetted isn't false after full reset")
+    }))
 
     it("should terminate stream of aggregated values after it emits once", () => {
       let form

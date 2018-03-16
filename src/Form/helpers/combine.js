@@ -84,10 +84,10 @@ export default function combineForms(cfg) {
     .map(handlers =>
       META_HANDLERS.reduce(
         (memo, key) => {
-          memo[key] = F.flow(
-            $flag.handler, // whenever special handler is called, set filtration flag to false
-            ...F.pluck(key, handlers)
-          )
+          memo[key] = () => {
+            $flag.handler() // whenever special handler is called, set filtration flag to false
+            return Promise.all(handlers.map(x => x[key]()))
+          }
           return memo
         },
         {}

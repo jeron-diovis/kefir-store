@@ -33,6 +33,103 @@ describe("form :: base:", () => {
 
       assert.throws(setup, /Handler name 'reset' is reserved/)
     })
+
+    describe("validate:", () => {
+      it("should return promise, resolving after validation completed", () => {
+        const form = Form()
+        const result = form.handlers.validate()
+        assert.instanceOf(result, Promise)
+      })
+
+      it("returned promise should resolve with form data after validation completed", () => FakeAsync(tick => {
+        const VALIDATION_DELAY = 100
+        const form = Form([
+          [ "setValue", "value", asyncify(toValidator(x => x > 0, ERROR_MSG), VALIDATION_DELAY) ]
+        ], {
+          value: 0
+        })
+
+        const spy = sinon.spy()
+        const promiseSpy = sinon.spy()
+
+        form.stream.changes().observe(spy)
+
+        const promise = form.handlers.validate()
+        promise.then(promiseSpy)
+
+        assert.equal(promiseSpy.callCount, 0, "promise resolved before validation completed")
+
+        tick(VALIDATION_DELAY)
+
+        assert.equal(spy.callCount, 1, "form does not emit after validation")
+        assert.equal(promiseSpy.callCount, 1, "promise is not resolved after validation completed")
+        assert.deepEqual(
+          promiseSpy.getCall(0).args[0],
+          {
+            state: { value: 0 },
+            errors: { value: ERROR_MSG },
+            status: { isValid: false, isValidated: true, isResetted: false },
+          },
+          "promise is not resolved with a form data"
+        )
+      }))
+
+      it("should skip successive calls while validation is in process", () => FakeAsync(tick => {
+        const VALIDATION_DELAY = 100
+
+        const form = Form([
+          [ "setValue", "value", asyncify(toValidator(x => x > 0), VALIDATION_DELAY) ]
+        ])
+
+        const spy = sinon.spy()
+
+        form.stream.changes().observe(spy)
+
+        form.handlers.validate()
+        tick(VALIDATION_DELAY / 2)
+        form.handlers.validate()
+        tick(VALIDATION_DELAY * 2)
+
+        assert.equal(spy.callCount, 1, "form emitted several times")
+
+        form.handlers.validate()
+        tick(VALIDATION_DELAY)
+        form.handlers.validate()
+        tick(VALIDATION_DELAY)
+
+        assert.equal(spy.callCount, 3, "independent successive validation calls does not work")
+      }))
+
+      it("if state changed during validation, successive validation call should return new promise", () => FakeAsync(tick => {
+        const VALIDATION_DELAY = 100
+
+        const form = Form([
+          [ "setValidatedValue", "validatedValue", asyncify(toValidator(x => x > 0), VALIDATION_DELAY) ],
+          [ "setNotValidatedValue", "notValidatedValue" ],
+        ])
+
+        const spy = sinon.spy()
+
+        form.stream.changes().observe(spy)
+
+        const promise1 = form.handlers.validate()
+        tick(VALIDATION_DELAY / 2)
+        form.handlers.setNotValidatedValue("")
+        const promise2 = form.handlers.validate()
+
+        assert.equal(spy.callCount, 1, "form didn't emit only once after just updating state")
+
+        assert.notEqual(promise1, promise2, "new validation promises is not created after state changed")
+
+        tick(VALIDATION_DELAY / 2)
+
+        assert.equal(spy.callCount, 2, "form didn't emit after first validation completed")
+
+        tick(VALIDATION_DELAY / 2)
+
+        assert.equal(spy.callCount, 3, "form didn't emit after second validation completed")
+      }))
+    })
   })
 
 

@@ -175,7 +175,7 @@ describe("form :: helpers:", () => {
         })
       })
 
-      it("when initial state is invalid", () => {
+      it("when initial state is invalid", () => FakeAsync(tick => {
         const form = Form([
           [ "setValue", "value", toValidator(x => x > 0, "ERROR") ]
         ], {
@@ -190,24 +190,27 @@ describe("form :: helpers:", () => {
         form.stream.changes().onValue(spyForm)
         Form.validOn(form, $validate.stream).onValue(spyValidState)
 
-        assert.equal(spyValidState.callCount, 0)
+        assert.equal(spyValidState.callCount, 0, "listener is called before validation ran")
 
         $validate.handler()
+        tick()
 
-        assert.equal(spyForm.callCount, 1)
-        assert.equal(spyValidState.callCount, 0)
+        assert.equal(spyForm.callCount, 1, "validation signal is not processed")
+        assert.equal(spyValidState.callCount, 0, "invalid state is considered valid")
 
         form.handlers.setValue(1)
-        $validate.handler()
+        assert.equal(spyForm.callCount, 2, "form does not emit after updating state to valid")
 
-        assert.equal(spyForm.callCount, 3)
+        $validate.handler()
+        tick()
+        assert.equal(spyForm.callCount, 3, "form does not emit after validating valid state")
 
         assert.equal(spyValidState.callCount, 1, "valid state isn't updated after setting correct value")
-        assert.deepEqual(spyValidState.getCall(0).args[0], { value: 1 })
-      })
+        assert.deepEqual(spyValidState.getCall(0).args[0], { value: 1 }, "valid state is composed wrong")
+      }))
 
 
-      it("when form has no validators", () => {
+      it("when form has no validators", () => FakeAsync(tick => {
         const form = Form([
           [ "setValue", "value" ]
         ], {
@@ -225,15 +228,16 @@ describe("form :: helpers:", () => {
         assert.equal(spyValidState.callCount, 0, "Validated state emits before validation event")
 
         $validate.handler()
+        tick()
 
         assert.equal(spyForm.callCount, 1, "Form isn't updated after validation")
 
         assert.equal(spyValidState.callCount, 1, "Validated state is not updated")
         assert.deepEqual(spyValidState.getCall(0).args[0], { value: 0 })
-      })
+      }))
 
 
-      it("when form has no fields at all", () => {
+      it("when form has no fields at all", () => FakeAsync(tick => {
         const form = Form([], { value: 0 })
 
         const $validate = Subject()
@@ -247,16 +251,17 @@ describe("form :: helpers:", () => {
         assert.equal(spyValidState.callCount, 0, "Validated state emits before validation event")
 
         $validate.handler()
+        tick()
 
         assert.equal(spyForm.callCount, 1, "Form isn't updated after validation")
 
         assert.equal(spyValidState.callCount, 1, "Validated state is not updated")
         assert.deepEqual(spyValidState.getCall(0).args[0], { value: 0 })
-      })
+      }))
     })
 
 
-    it("should accept form as stream", () => {
+    it("should accept form as stream", () => FakeAsync(tick => {
       const form$ = Form.asStream([
         [ "setValue", "value", toValidator(x => x > 0, "ERROR") ]
       ], {
@@ -272,11 +277,12 @@ describe("form :: helpers:", () => {
       Form.validOn(form$, subj.stream).onValue(spyValidState)
 
       subj.handler()
+      tick()
 
-      assert.equal(spyForm.callCount, 1)
+      assert.equal(spyForm.callCount, 1, "form didn't emit after validation signal")
 
-      assert.equal(spyValidState.callCount, 1)
-      assert.deepEqual(spyValidState.lastCall.args[0], { value: 1 })
-    })
+      assert.equal(spyValidState.callCount, 1, "valid state didn't emit after validation signal")
+      assert.deepEqual(spyValidState.lastCall.args[0], { value: 1 }, "valid state is wrong")
+    }))
   })
 })

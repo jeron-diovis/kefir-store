@@ -133,9 +133,50 @@ class Form extends Model {
       stream,
 
       handlers: Object.assign(handlers, {
-        validate: this.$validate.handler,
-        reset: this.$reset.handler,
+        validate: this._makeStatusHandler({
+          stream,
+          propName: "_validationPromise",
+          checkStatus: x => x.isValidated,
+          handler: this.$validate.handler,
+        }),
+
+        reset: this._makeStatusHandler({
+          stream,
+          propName: "_resetPromise",
+          checkStatus: x => x.isResetted,
+          handler: this.$reset.handler,
+        }),
       }),
+    }
+  }
+
+  _makeStatusHandler({ stream, propName, checkStatus, handler }) {
+    return () => {
+      if (!this[propName]) {
+        let inProcess = false
+
+        this[propName] = stream.changes()
+          .map(x => {
+            // reset if state has changed when process is executing
+            if (inProcess) {
+              this[propName] = null
+            }
+            return x
+          })
+          .filter(x => checkStatus(x.status)).take(1)
+          .toPromise()
+          .catch(x => x)
+          .then(x => {
+            this[propName] = null
+            return x
+          })
+
+        handler()
+
+        inProcess = true
+      }
+
+      return this[propName]
     }
   }
 }
