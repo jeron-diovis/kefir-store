@@ -9,7 +9,7 @@ const getState = F.prop("state")
 
 
 export const validatedOn = F.curry((form, event$) => {
-  return ap(toStream(form).map(getValidator), event$).flatMap(Kefir.fromPromise).spy()
+  return ap(toStream(form).map(getValidator), event$).flatMap(Kefir.fromPromise)
 })
 
 
