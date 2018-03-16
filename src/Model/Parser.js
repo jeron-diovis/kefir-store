@@ -50,18 +50,33 @@ export default class ModelParser extends StreamParser {
   }
 
   parseArrayInput(array) {
-    const [ first, second ] = array
+    const [ first, second, third ] = array
 
     if (F.isString(first)) {
-      const { stream, handler } = Subject()
+      let stream, handler, init
+
+      if (Subject.is(second)) {
+        ({ stream, handler } = second)
+        init = third || F.id
+      } else {
+        ({ stream, handler } = Subject())
+        init = second
+      }
+
       return {
         name: first,
         handler,
-        ...super.parseArrayInput([ stream, second ])
+        ...super.parseArrayInput([ stream, init ])
       }
     }
 
     if (F.isStream(first)) {
+      if (Subject.is(second)) {
+        throw new Error(`[kefir-store :: model] Invalid input.
+          If input is an array with first value observable, passing subject is not allowed.
+        `)
+      }
+
       return {
         name: NONAME,
         ...super.parseArrayInput([ first, second ])
@@ -70,7 +85,7 @@ export default class ModelParser extends StreamParser {
 
     throw new Error(`[kefir-store :: model] Invalid input.
       If input is an array, it should have following format:
-      [ String|Observable, Function ]
+      [ String|Observable, Function ] or [ String, Subject, ?Function ]
       Current:  ${JSON.stringify(array)}
     `)
   }

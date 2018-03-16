@@ -32,7 +32,7 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 #### ModelField :: Array.<ModelInput, Reducer>
 
-#### ModelInput :: ModelInputSource | Array.<ModelInputSource, InputInitializer>
+#### ModelInput :: ModelInputSource | Array.<ModelInputSource, InputInitializer> | Array.<String, Subject, ?InputInitializer>
 
 #### ModelInputSource :: String | Observable.\<Any\>
 
@@ -127,6 +127,38 @@ decorate(({ state, handlers }) => (
 ### Model.toStream
 
 Just handy helper to "pack" already created model into Observable.
+
+### Subject as input
+
+Sometimes there is a need to make one model input to depend from another one. For this you have to define that "shared" input outside of model. But then you'll have to manually add handler to handlers set, like this:
+```js
+const sharedInput = Subject()
+
+const model = Model([
+  [ [ "setFoo", $ => $.merge(sharedInput.stream) ], "foo" ],
+  [ sharedInput.stream, "bar" ],
+])
+model.handlers.setBar = sharedInput.handler
+```
+This is not convenient and breaks the general declarative approach.
+
+To solve this issue, it's allowed to pass subject directly to input config like this:
+```js
+const sharedInput = Subject()
+
+const model = Model([
+  [ [ "setFoo", $ => $.merge(sharedInput.stream) ], "foo" ],
+  [ [ "setBar", sharedInput ], "bar" ],
+], {
+  foo: 0, bar: 0,
+})
+
+model.handlers.setBar(1) // { foo: 1, bar: 1 }
+sharedInput.handler(2) // { foo: 2, bar: 2 }
+model.handlers.setFoo(3) // { foo: 3, bar: 2 }
+``` 
+
+Stream initializer still can be passed, as third param in array: `[ "setBar", sharedInput, $ => $.map(...) ]`
 
 ## Further docs
 * [Form](/docs/Form.md)
