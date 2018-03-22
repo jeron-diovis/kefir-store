@@ -23,7 +23,7 @@ describe("model :: base", () => {
       assert.property(data, "state", "Stream data has no 'state' property")
       assert.deepEqual(data.state, { value: "initial value" }, "State is wrong")
 
-      assert.deepProperty(data, "handlers.setValue", "Stream data has no handlers")
+      assert.nestedProperty(data, "handlers.setValue", "Stream data has no handlers")
       assert.isFunction(data.handlers.setValue, "Named handler is not created")
     }
 
