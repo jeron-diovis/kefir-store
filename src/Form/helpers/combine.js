@@ -78,6 +78,8 @@ export default function combineForms(cfg) {
 
   const $flag = Subject($ => $.map(F.returnFalse).toProperty(F.returnTrue))
 
+  const combineByKeys = combine(keys)
+
   const combinedHandlers$ = formsList$.take(1)
     .map(xs => xs.filter(isForm))
     .map(F.pluck("handlers"))
@@ -86,7 +88,7 @@ export default function combineForms(cfg) {
         (memo, key) => {
           memo[key] = () => {
             $flag.handler() // whenever special handler is called, set filtration flag to false
-            return Promise.all(handlers.map(x => x[key]()))
+            return Promise.all(handlers.map(x => x[key]())).then(combineByKeys)
           }
           return memo
         },
@@ -96,7 +98,7 @@ export default function combineForms(cfg) {
 
   const formsCount$ = formsList$.map(xs => xs.filter(isForm).length)
 
-  const combo$ = formsList$.map(combine(keys))
+  const combo$ = formsList$.map(combineByKeys)
     .combine(
       combinedHandlers$,
       (form, handlers) => {

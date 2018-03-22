@@ -51,27 +51,56 @@ describe("form :: helpers :: combine:", () => {
 
   })
 
-  it("should create own reset/validate handlers and own status values for combined form", () => {
-    const combo$ = Form.combine({
-      f1: Form.asStream(),
-      f2: Form.asStream(),
-      f3: Form.asStream(),
+  describe("combined meta-handlers", () => {
+    it("should create own reset/validate handlers and own status values for combined form", () => {
+      const combo$ = Form.combine({
+        f1: Form.asStream(),
+        f2: Form.asStream(),
+        f3: Form.asStream(),
+      })
+
+      assert.instanceOf(combo$, Kefir.Observable, "Combined form is not a stream")
+
+      const spy = sinon.spy()
+      combo$.onValue(spy)
+
+      const result = spy.getCall(0).args[0]
+
+      assert.isFunction(result.handlers.reset, "No combined 'reset' handler")
+      assert.isFunction(result.handlers.validate, "No combined 'validate' handler")
+
+      assert.property(result.status, "isValid", "No 'isValid' status for combined form")
+      assert.equal(result.status.isValid, undefined, "Wrong combined 'isValid' status")
+      assert.equal(result.status.isValidated, false, "Wrong combined 'isValidated' status")
+      assert.equal(result.status.isResetted, false, "Wrong combined 'isResetted' status")
     })
 
-    assert.instanceOf(combo$, Kefir.Observable, "Combined form is not a stream")
+    it("should return promise with same shape as data in stream", () => FakeAsync(tick => {
+      const combo$ = Form.combine({
+        f1: Form.asStream(),
+        f2: Form.asStream(),
+      })
 
-    const spy = sinon.spy()
-    combo$.onValue(spy)
+      let data
 
-    const result = spy.getCall(0).args[0]
+      combo$.observe(x => {
+        data = x
+      })
 
-    assert.isFunction(result.handlers.reset, "No combined 'reset' handler")
-    assert.isFunction(result.handlers.validate, "No combined 'validate' handler")
+      const spy = sinon.spy()
+      const $validate = data.handlers.validate()
 
-    assert.property(result.status, "isValid", "No 'isValid' status for combined form")
-    assert.equal(result.status.isValid, undefined, "Wrong combined 'isValid' status")
-    assert.equal(result.status.isValidated, false, "Wrong combined 'isValidated' status")
-    assert.equal(result.status.isResetted, false, "Wrong combined 'isResetted' status")
+      assert.isFunction($validate.then)
+
+      $validate.then(spy)
+
+      tick()
+
+      assert.equal(spy.callCount, 1, "validation promise isn't resolved")
+      const result = spy.getCall(0).args[0]
+      assert.isObject(result)
+      assert.nestedPropertyVal(result, "status.isValid", true)
+    }))
   })
 
   it("should emit atomic updates on validation or resetting", () => {
