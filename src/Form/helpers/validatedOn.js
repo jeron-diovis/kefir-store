@@ -1,15 +1,20 @@
-import Kefir from "kefir"
 import * as F from "../../lib/func_utils"
 import { ap } from "../../lib/stream_utils"
 import toStream from "./toStream"
 
 const getIsValid = F.flow(F.prop("status"), F.prop("isValid"))
+const getIsValidated = F.flow(F.prop("status"), F.prop("isValidated"))
 const getValidator = F.flow(F.prop("handlers"), F.prop("validate"))
 const getState = F.prop("state")
 
 
 export const validatedOn = F.curry((form, event$) => {
-  return ap(toStream(form).map(getValidator), event$).flatMap(Kefir.fromPromise)
+  const form$ = toStream(form)
+  return (
+    event$
+      .flatMapLatest(() => form$.changes().filter(getIsValidated).take(1))
+      .zip(ap(form$.map(getValidator), event$), F.id)
+  )
 })
 
 
