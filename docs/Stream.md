@@ -23,7 +23,7 @@ Here and further in docs:
 
 #### State :: Any
 
-#### Seed :: Observable.\<Any\> | Any = {}
+#### Seed :: Observable.<Any> | Any = {}
 
 #### Options :: { init: StreamInitializer } = {}
 
@@ -33,7 +33,7 @@ Here and further in docs:
 
 #### Reducer :: String | Function (state, patch) -> new_state
 
-#### Input :: Observable.\<Any\> | Array.<Observable.\<Any\>, InputInitializer>
+#### Input :: Observable.<Any> | Array.<Observable.<Any>, InputInitializer>
 
 #### InputInitializer :: Function (patch$, state$) -> modified_patch$
 

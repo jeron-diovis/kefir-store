@@ -36,11 +36,11 @@ That is, besides state, we have a set of error messages and validity status. Thi
 
 ---
 
-#### FormObject :: { stream: Observable.\<FormShape\>, handlers: FormHandlers }
+#### FormObject :: { stream: Observable.<FormShape>, handlers: FormHandlers }
 
 #### FormHandlers :: { ...Handlers, reset: Function, validate: Function }
 
-#### FormStream :: Observable.\<FormStreamObject\>
+#### FormStream :: Observable.<FormStreamObject>
 
 #### FormStreamObject :: { ...FormShape, handlers: FormHandlers }
 
@@ -52,7 +52,7 @@ That is, besides state, we have a set of error messages and validity status. Thi
 
 #### ValidatorConfig :: Validator | Array.<Validator, ValidatorOptions>
 
-#### Validator :: Function (value, current_state) -> ValidationResult | Promise.\<ValidationResult\>
+#### Validator :: Function (value, current_state) -> ValidationResult | Promise.<ValidationResult>
 
 #### ValidatorOptions :: String | { get: Function, set: Function, key: String }
 

@@ -22,9 +22,9 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 ---
 
-#### ModelObject :: { stream: Observable.\<State\>, handlers: Handlers }
+#### ModelObject :: { stream: Observable.<State>, handlers: Handlers }
 
-#### ModelStream :: Observable.\<ModelStreamObject\>
+#### ModelStream :: Observable.<ModelStreamObject>
 
 #### ModelStreamObject :: { state: State, handlers: Handlers }
 
@@ -34,7 +34,7 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 #### ModelInput :: ModelInputSource | Array.<ModelInputSource, InputInitializer> | Array.<String, Subject, ?InputInitializer>
 
-#### ModelInputSource :: String | Observable.\<Any\>
+#### ModelInputSource :: String | Observable.<Any>
 
 ## Short example
 
