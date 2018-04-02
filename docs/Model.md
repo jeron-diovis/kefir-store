@@ -14,7 +14,7 @@ This is what `Model` actually is: `Stream` + handlers to push updates into it.
 
 > for types not described here see [Stream API](/docs/Stream.md#api)
 
-#### `Model(config: Array.<ModelField> [, Seed]): ModelObject`
+#### `Model(config: Array.<ModelField> [, Seed, Options]): ModelObject`
 
 #### `Model.asStream(config: Array.<ModelField> [, Seed]): ModelStream`
 

@@ -12,8 +12,8 @@ const tap = f => x => (f(x), x)
 // ---
 
 class Stream {
-  constructor(config, initialState = CONFIG.getEmptyObject()) {
-    this._init(this._initInitialState(initialState))
+  constructor(config, initialState = CONFIG.getEmptyObject(), options = {}) {
+    this._init(this._initInitialState(initialState), options)
     return this._build(this._getParser().parse(config))
   }
 
@@ -23,10 +23,12 @@ class Stream {
 
   /**
    * @param {Observable.<*>} initialState$
+   * @param {Object} options
    * @protected
    */
-  _init(initialState$) {
+  _init(initialState$, options = {}) {
     this.initialState$ = initialState$
+    this.options = options
   }
 
   /**
@@ -100,11 +102,15 @@ class Stream {
 
     const fields$ = Kefir.merge(this._createStreams(currentState$, fields))
 
-    return (
-      initialState$
-        .merge(fields$.map(tap(setCurrentState)))
-        .toProperty()
-    )
+    const { init } = this.options
+    const state$ = initialState$.merge(fields$.map(tap(setCurrentState)))
+    const initialized$ = !init ? state$ : init(state$)
+
+    if (init && !F.isStream(initialized$)) {
+      throw new Error("[kefir-store] Option 'init' must return a stream")
+    }
+
+    return initialized$.toProperty()
   }
 }
 

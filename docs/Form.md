@@ -22,7 +22,7 @@ That is, besides state, we have a set of error messages and validity status. Thi
 
 #### `Form(config: Array.<FormField> [, Seed]): FormObject`
 
-#### `Form.asStream(config: Array.<FormField> [, Seed]): FormStream`
+#### `Form.asStream(config: Array.<FormField> [, Seed, Options]): FormStream`
 
 #### `Form.toStream(FormObject): FormStream`
 

@@ -17,13 +17,17 @@ Here and further in docs:
 
 ## API
 
-#### `Stream(config: Array.<Field> [, Seed]): Observable.<State>`
+#### `Stream(config: Array.<Field> [, Seed, Options]): Observable.<State>`
 
 ---
 
 #### State :: Any
 
 #### Seed :: Observable.\<Any\> | Any = {}
+
+#### Options :: { init: StreamInitializer } = {}
+
+#### StreamInitializer :: Observable -> Observable
 
 #### Field :: Array.<Input, Reducer>
 
@@ -54,6 +58,8 @@ Stream([
   ]
 ], {
   id: 42,
+}, {
+  init: $ => $.spy("debug info")
 })
 ```
 
@@ -64,6 +70,13 @@ Stream([
 Seed can be defined as Observable. If it is, the first value will be taken from it and used as seed.
 
 Because in most cases speaking about store we mean a state object with some data fields, by default seed will be set to empty object.
+
+### StreamInitializer
+
+The way to do some setup over created stream. Allows to create and initialize stream in a single expression.
+
+For `Stream` itself it does not have much sense, as the same can be done via just operators on observable. 
+This is added mostly for working with further entities: [`Model`](/docs/Model.md) and [`Form`](/docs/Form.md).
  
 ### Reducer
 
