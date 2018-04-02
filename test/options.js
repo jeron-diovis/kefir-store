@@ -4,15 +4,12 @@ describe("options", () => {
   describe("init", () => {
     it("should accept created stream and return transformed stream", () => {
       const subj = Subject()
-      const spyInit = sinon.spy($ => $.map(state => {
-        state.foo = state.foo * 2
-        return state
-      }))
+      const spyInit = sinon.spy($ => $.map(state => ({ ...state, foo: state.foo * 2 })))
       const spyState = sinon.spy()
 
       const stream = Stream([
         [ subj.stream, "foo" ]
-      ], { foo: 0 }, { init: spyInit })
+      ], { foo: 1 }, { init: spyInit })
 
       stream.changes().observe(spyState)
 

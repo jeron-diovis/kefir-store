@@ -41,38 +41,75 @@ describe("form :: base:", () => {
         assert.instanceOf(result, Promise)
       })
 
-      it("returned promise should resolve with form data after validation completed", () => FakeAsync(tick => {
-        const VALIDATION_DELAY = 100
-        const form = Form([
-          [ "setValue", "value", asyncify(toValidator(x => x > 0, ERROR_MSG), VALIDATION_DELAY) ]
-        ], {
-          value: 0
-        })
+      describe("returned promise should resolve with form data after validation completed:", () => {
+        it("basic:", () => FakeAsync(tick => {
+          const VALIDATION_DELAY = 100
+          const form = Form([
+            [ "setValue", "value", asyncify(toValidator(x => x > 0, ERROR_MSG), VALIDATION_DELAY) ]
+          ], {
+            value: 0
+          })
 
-        const spy = sinon.spy()
-        const promiseSpy = sinon.spy()
+          const spy = sinon.spy()
+          const promiseSpy = sinon.spy()
 
-        form.stream.changes().observe(spy)
+          form.stream.changes().observe(spy)
 
-        const promise = form.handlers.validate()
-        promise.then(promiseSpy)
+          const promise = form.handlers.validate()
+          promise.then(promiseSpy)
 
-        assert.equal(promiseSpy.callCount, 0, "promise resolved before validation completed")
+          assert.equal(promiseSpy.callCount, 0, "promise resolved before validation completed")
 
-        tick(VALIDATION_DELAY)
+          tick(VALIDATION_DELAY)
 
-        assert.equal(spy.callCount, 1, "form does not emit after validation")
-        assert.equal(promiseSpy.callCount, 1, "promise is not resolved after validation completed")
-        assert.deepEqual(
-          promiseSpy.getCall(0).args[0],
-          {
-            state: { value: 0 },
-            errors: { value: ERROR_MSG },
-            status: { isValid: false, isValidated: true, isResetted: false },
-          },
-          "promise is not resolved with a form data"
-        )
-      }))
+          assert.equal(spy.callCount, 1, "form does not emit after validation")
+          assert.equal(promiseSpy.callCount, 1, "promise is not resolved after validation completed")
+          assert.deepEqual(
+            promiseSpy.getCall(0).args[0],
+            {
+              state: { value: 0 },
+              errors: { value: ERROR_MSG },
+              status: { isValid: false, isValidated: true, isResetted: false },
+            },
+            "promise is not resolved with a form data"
+          )
+        }))
+
+        it("should apply transformations from 'init' option", () => FakeAsync(tick => {
+          const VALIDATION_DELAY = 100
+
+          const form = Form([
+            [ "setValue", "value", asyncify(toValidator(x => x < 3, ERROR_MSG), VALIDATION_DELAY) ]
+          ], {
+            value: 2,
+          }, {
+            init: $ => $.map(form => ({
+              ...form,
+              state: {
+                ...form.state,
+                value: form.state.value * 2,
+              },
+            })),
+          })
+
+          form.stream.observe()
+          const promiseSpy = sinon.spy()
+
+          const promise = form.handlers.validate()
+          promise.then(promiseSpy)
+
+          tick(VALIDATION_DELAY)
+
+          assert.deepEqual(
+            promiseSpy.getCall(0).args[0],
+            {
+              state: { value: 4 },
+              errors: { value: null },
+              status: { isValid: true, isValidated: true, isResetted: false },
+            }
+          )
+        }))
+      })
 
       it("should skip successive calls while validation is in process", () => FakeAsync(tick => {
         const VALIDATION_DELAY = 100
@@ -129,6 +166,73 @@ describe("form :: base:", () => {
 
         assert.equal(spy.callCount, 3, "form didn't emit after second validation completed")
       }))
+
+      describe("should apply validation to origin stream, created by constructor, ignoring further transformations:", () => {
+        it("via operators on stream", () => FakeAsync(tick => {
+          const form = Form([
+            [ "setFoo", "foo", toValidator(x => x < 3) ]
+          ], { foo: 2 })
+
+          const s$ = form.stream.map(form => ({
+            ...form,
+            state: {
+              ...form.state,
+              foo: form.state.foo * 2,
+            }
+          }))
+
+          const spy = sinon.spy()
+          s$.changes().observe(spy)
+
+          form.handlers.validate()
+          tick()
+
+          assert.deepEqual(spy.getCall(0).args[0], {
+            state: { foo: 4 },
+            errors: { foo: null },
+            status: {
+              isValid: true,
+              isValidated: true,
+              isResetted: false,
+            },
+          })
+        }))
+
+        it("via 'init' option", () => FakeAsync(tick => {
+          const form = Form(
+            [
+              [ "setFoo", "foo", toValidator(x => x < 3) ]
+            ],
+            { foo: 2 },
+            {
+              init: $ => $.map(form => ({
+                ...form,
+                state: {
+                  ...form.state,
+                  foo: form.state.foo * 2,
+                }
+              }))
+            }
+          )
+
+          const spy = sinon.spy()
+          form.stream.changes().observe(spy)
+
+          form.handlers.validate()
+          tick()
+
+          assert.deepEqual(spy.getCall(0).args[0], {
+            state: { foo: 4 },
+            errors: { foo: null },
+            status: {
+              isValid: true,
+              isValidated: true,
+              isResetted: false,
+            },
+          })
+        }))
+      })
+
     })
   })
 

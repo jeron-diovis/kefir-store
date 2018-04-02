@@ -70,7 +70,7 @@ class Stream {
    * @protected
    */
   _build(fields) {
-    const { initialState$ } = this
+    const { initialState$, options } = this
 
     /**
      * The core concept is to merge several streams
@@ -101,15 +101,13 @@ class Stream {
     } = Subject($ => $.merge(initialState$).toProperty())
 
     const fields$ = Kefir.merge(this._createStreams(currentState$, fields))
-
-    const { init } = this.options
     const state$ = initialState$.merge(fields$.map(tap(setCurrentState)))
-    const initialized$ = !init ? state$ : init(state$)
 
+    const { init } = options
+    const initialized$ = !init ? state$ : init(state$)
     if (init && !F.isStream(initialized$)) {
       throw new Error("[kefir-store] Option 'init' must return a stream")
     }
-
     return initialized$.toProperty()
   }
 }
