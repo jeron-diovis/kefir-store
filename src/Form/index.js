@@ -19,23 +19,6 @@ const resetMetaStatuses = F.flow(
   F.update("isValidated", F.returnFalse)
 )
 
-const zipFormParts = (state$, errors$, status$) => (
-  Kefir.zip(
-    [
-      state$,
-      errors$,
-      status$.sampledBy(
-        errors$
-          .map(CONFIG.getValuesList)
-          .map(xs => xs.every(CONFIG.isNotValidationError)),
-        CONFIG.reducer("isValid")
-      ),
-    ],
-    (state, errors, status) => ({ state, errors, status })
-  )
-  .map(helpers.mark)
-)
-
 // ---
 
 class Form extends Model {
@@ -66,6 +49,26 @@ class Form extends Model {
     super._init(...args)
   }
 
+  zipFormParts(state$, errors$, status$) {
+    const { mapErrors = F.id } = this.options
+    errors$ = errors$.map(mapErrors)
+
+    return Kefir.zip(
+      [
+        state$,
+        errors$,
+        status$.sampledBy(
+          errors$
+            .map(CONFIG.getValuesList)
+            .map(xs => xs.every(CONFIG.isNotValidationError)),
+          CONFIG.reducer("isValid")
+        ),
+      ],
+      (state, errors, status) => ({ state, errors, status })
+    )
+      .map(helpers.mark)
+  }
+
   _createInputStream(current, cfg) {
     const [ inputFields, errorField ] = createValidatedFields(current.state$, cfg)
 
@@ -81,7 +84,7 @@ class Form extends Model {
   _createMainStream(current, fields) {
     const [ state = [], errors = [] ] = F.zip(...super._createStreams(current, fields))
 
-    return zipFormParts(
+    return this.zipFormParts(
       Kefir.merge(state),
       Kefir.merge(errors),
       current.status$.map(resetMetaStatuses)
@@ -105,7 +108,28 @@ class Form extends Model {
       F.update("isValidated", F.returnTrue)
     )
 
-    return zipFormParts(state$, errors$, status$)
+    return this.zipFormParts(state$, errors$, status$)
+  }
+
+  _createExternalErrorsStream(current) {
+    const { externalErrors } = this.options
+    if (!externalErrors) {
+      return Kefir.never()
+    }
+
+    let stream, combine
+    if (Array.isArray(externalErrors)) {
+      ([ stream, combine ] = externalErrors)
+    } else {
+      stream = externalErrors
+      combine = (a, b) => ({ ...a, ...b })
+    }
+
+    return this.zipFormParts(
+      current.state$.sampledBy(stream),
+      current.errors$.sampledBy(stream, combine),
+      current.status$.map(resetMetaStatuses)
+    )
   }
 
   _createStreams(current$, fields) {
@@ -119,6 +143,8 @@ class Form extends Model {
       this._createMainStream(parts, fields),
 
       this._createFullValidationStream(parts, fields),
+
+      this._createExternalErrorsStream(parts, fields),
 
       this.initialState$
         .map(F.update("status.isResetted", F.returnTrue))

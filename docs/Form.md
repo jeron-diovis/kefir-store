@@ -343,6 +343,21 @@ decorate(({ onSubmit }) => (
 ))
 ```
 
+### Options
+
+#### mapErrors: old_errors -> new_errors
+
+Transforms errors at moment after state validated but before validity status is computed.
+
+Use when some very custom logic of errors displaying is needed.
+
+#### externalErrors: Observable|Array.<Observable, Function(internal_errors, external_errors) -> new_internal_errors>
+
+For cases when errors set comes from outer source – usually when your validated data is sent ot server and server-side validation finds some errors you can't catch on client side.
+
+This allows to integrate that "external" errors into normal form's flow, without need to manually recalculate validity status after merging two error sets and decide when to reset server error for each particular field.
+
+
 ### Form.combine
 
 This helper combines multiple streams into a `FormStream` (see [types definitions above](/docs/Form.md#api)).

@@ -1,4 +1,4 @@
-import { Stream, Subject } from "../src"
+import { Stream, Form, Subject } from "../src"
 
 describe("options", () => {
   describe("init", () => {
@@ -23,6 +23,107 @@ describe("options", () => {
     it("should require to return a stream", () => {
       const setup = () => Stream([], undefined, { init: () => ({}) })
       assert.throws(setup, /must return a stream/)
+    })
+  })
+
+  describe("form: mapErrors", () => {
+    it("should map `errors` field before it's passed anywhere else", () => {
+      const mapErrors = sinon.spy(x => ({ bar: x.foo }))
+
+      const form = Form([
+        [ "setFoo", "foo", toValidator(x => x > 0, "foo error") ],
+      ], {
+        foo: 0,
+      }, {
+        mapErrors: mapErrors,
+      })
+
+      const spy = sinon.spy()
+
+      form.stream.changes().observe(spy)
+
+      form.handlers.setFoo(0)
+
+      assert.equal(mapErrors.callCount, 1, "`mapErrors` isn't called")
+
+      assert.deepEqual(spy.getCall(0).args[0].errors, {
+        bar: "foo error",
+      }, "errors aren't transformed")
+    })
+  })
+
+  describe("form: externalErrors", () => {
+    it("should accept a stream, overriding `errors` field", () => {
+      const { stream: externalErrors$, handler: setExternalErrors } = Subject()
+
+      const form = Form([
+        [ "setFoo", "foo", toValidator(x => x > 0, "foo internal") ],
+        [ "setBar", "bar", toValidator(x => x > 0, "bar internal") ],
+      ], {
+        foo: 0,
+        bar: 0,
+      }, {
+        externalErrors: externalErrors$,
+      })
+
+      const spy = sinon.spy()
+
+      form.stream.changes().observe(spy)
+
+      form.handlers.validate()
+
+      setExternalErrors({
+        foo: "foo external",
+      })
+
+      assert.equal(spy.callCount, 2, "form does not emit after receiving external errors")
+
+      assert.deepEqual(spy.getCall(1).args[0].errors, {
+        foo: "foo external",
+        bar: "bar internal",
+      }, "external errors does not override internal state")
+
+      form.handlers.setBar(1)
+
+      assert.deepEqual(spy.getCall(2).args[0].errors, {
+        foo: "foo external",
+        bar: null,
+      })
+    })
+
+    it("`combine`: should allow custom logic for combining internal and external errors", () => {
+      const { stream: externalErrors$, handler: setExternalErrors } = Subject()
+
+      const combine = sinon.spy((internal, external) => ({
+        foo: `${internal.foo}|${external.foo}`,
+      }))
+
+      const form = Form([
+        [ "setFoo", "foo", toValidator(x => x > 0, "foo internal") ],
+      ], {
+        foo: 0,
+      }, {
+        externalErrors: [
+          externalErrors$,
+          combine,
+        ],
+      })
+
+      const spy = sinon.spy()
+
+      form.stream.changes().observe(spy)
+
+      form.handlers.validate()
+
+      setExternalErrors({
+        foo: "foo external",
+      })
+
+      assert.equal(combine.callCount, 1, "`combine` func is not called")
+
+      assert.deepEqual(spy.getCall(1).args[0].errors, {
+        foo: "foo internal|foo external",
+      })
     })
   })
 })
