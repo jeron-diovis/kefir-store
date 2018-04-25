@@ -50,9 +50,6 @@ class Form extends Model {
   }
 
   zipFormParts(state$, errors$, status$) {
-    const { mapErrors = F.id } = this.options
-    errors$ = errors$.map(mapErrors)
-
     return Kefir.zip(
       [
         state$,
@@ -82,16 +79,20 @@ class Form extends Model {
   }
 
   _createMainStream(current, fields) {
+    const { mapErrors = F.id } = this.options
+
     const [ state = [], errors = [] ] = F.zip(...super._createStreams(current, fields))
 
     return this.zipFormParts(
       Kefir.merge(state),
-      Kefir.merge(errors),
+      Kefir.merge(errors).map(mapErrors),
       current.status$.map(resetMetaStatuses)
     )
   }
 
   _createFullValidationStream(current, fields) {
+    const { mapErrors = F.id } = this.options
+
     const state$ = current.state$.sampledBy(this.$validate.stream)
 
     const errors$ = (
@@ -102,7 +103,7 @@ class Form extends Model {
           F.pluck("validator", fields)
         )
       )
-    )
+    ).map(mapErrors)
 
     const status$ = current.status$.map(
       F.update("isValidated", F.returnTrue)
