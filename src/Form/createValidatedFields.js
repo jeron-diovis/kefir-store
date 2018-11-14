@@ -9,19 +9,6 @@ const getErrorProp = F.prop("error")
 
 // ---
 
-const indexed = $ => (
-  $.scan(
-    (state, value) => {
-      // only for internal usage, so mutable state is ok
-      state.value = value
-      ++state.idx
-      return state
-    },
-    { idx: 0 }
-  )
-  .changes()
-)
-
 const negate = fn => (...args) => !fn(...args)
 
 const partition = F.curry((predicate, $) => [
@@ -45,14 +32,8 @@ export default F.curry((state$, { input, reducer, validator }) => {
   // But validator can be async.
   // And if new value arrives before validation for previous one is completed,
   // then we are no more interested in neither prev value nor it's validation result.
-  const validated$ = (
-    S.withLatestFrom(
-      indexed(validator.ap(S.withLatestFrom(input$, state$))),
-      indexed(input$)
-    )
-    .filter(([ error, input ]) => error.idx === input.idx)
-    .map(([ error, input ]) => ({ error: error.value, value: input.value }))
-    .toProperty()
+  const validated$ = input$.flatMapLatest(
+    value => validator.ap(S.withLatestFrom(S.of(value), state$)).map(error => ({ value, error }))
   )
 
   return [
