@@ -126,4 +126,70 @@ describe("options", () => {
       })
     })
   })
+
+  describe("form: resetWith", () => {
+    it("should reset errors and status, and replace state", () => {
+      const $reset = Subject()
+
+      const form = Form([
+        [ "setValue", "value", toValidator(x => x > 0) ],
+      ], undefined, {
+        resetWith: $reset.stream,
+      })
+
+      const spy = sinon.spy()
+      form.stream.changes().observe(spy)
+
+      form.handlers.setValue(-1)
+
+      assert.equal(spy.callCount, 1)
+      assert.deepEqual(spy.lastCall.args[0].errors, { value: ERROR_MSG })
+      assert.deepEqual(spy.lastCall.args[0].status, {
+        isValid: false,
+        isValidated: false,
+        isResetted: false,
+      })
+
+      $reset.handler({ foo: "bar" })
+
+      assert.equal(spy.callCount, 2, "reset stream does not update form")
+
+      assert.deepEqual(spy.lastCall.args[0].errors, {}, "errors are not resetted")
+      assert.deepEqual(spy.lastCall.args[0].status, {
+        isValid: undefined,
+        isValidated: false,
+        isResetted: true,
+      }, "status is not resetted")
+    })
+
+    it("as array: should allow custom state combination logic", () => {
+      const $reset = Subject()
+
+      const form = Form([
+        [ "setValue", "value", toValidator(x => x > 0) ],
+      ], undefined, {
+        resetWith: [
+          $reset.stream,
+          (new_state, old_state) => ({ ...old_state, ...new_state })
+        ],
+      })
+
+      const spy = sinon.spy()
+      form.stream.changes().observe(spy)
+
+      form.handlers.setValue(-1)
+
+      $reset.handler({ foo: "bar" })
+
+      assert.equal(spy.callCount, 2, "reset stream does not update form")
+
+      assert.deepEqual(spy.lastCall.args[0].state, { foo: "bar", value: -1 }, "state isn't merged")
+      assert.deepEqual(spy.lastCall.args[0].errors, {}, "errors are not resetted")
+      assert.deepEqual(spy.lastCall.args[0].status, {
+        isValid: undefined,
+        isValidated: false,
+        isResetted: true,
+      }, "status is not resetted")
+    })
+  })
 })

@@ -357,6 +357,9 @@ For cases when errors set comes from outer source – usually when your validate
 
 This allows to integrate that "external" errors into normal form's flow, without need to manually recalculate validity status after merging two error sets and decide when to reset server error for each particular field.
 
+#### resetWith: Observable|Array.<Observable, Function(resetted_state, current_state, initial_state) -> new_state>
+
+Reset errors and status to defaults, and replace state with new one.
 
 ### Form.combine
 

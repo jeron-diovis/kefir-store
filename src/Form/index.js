@@ -7,6 +7,7 @@ import { Class as Model } from "../Model"
 import Subject from "../lib/Subject"
 
 import * as F from "../lib/func_utils"
+import * as S from "../lib/stream_utils"
 import * as helpers from "./helpers"
 
 import createValidatedFields from "./createValidatedFields"
@@ -133,6 +134,32 @@ class Form extends Model {
     )
   }
 
+  _createResetStream({ state$ }) {
+    const { resetWith = Kefir.never() } = this.options
+
+    let stream, combine
+    if (Array.isArray(resetWith)) {
+      ([ stream, combine ] = resetWith)
+    } else {
+      stream = resetWith
+      combine = F.id
+    }
+
+    return Kefir.merge([
+      this.initialState$.sampledBy(this.$reset.stream),
+
+      S.withLatestFrom(
+        stream,
+        [ state$, this.initialState$ ],
+        (new_state, current_state, initial_form) => ({
+          ...initial_form,
+          state: combine(new_state, current_state, initial_form.state)
+        })
+      )
+    ])
+      .map(F.update("status.isResetted", F.returnTrue))
+  }
+
   _createStreams(current$, fields) {
     const parts = {
       state$: current$.map(F.prop("state")),
@@ -147,9 +174,7 @@ class Form extends Model {
 
       this._createExternalErrorsStream(parts, fields),
 
-      this.initialState$
-        .map(F.update("status.isResetted", F.returnTrue))
-        .sampledBy(this.$reset.stream),
+      this._createResetStream(parts),
     ]
   }
 
