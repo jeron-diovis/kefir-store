@@ -127,7 +127,7 @@ class Form extends Model {
       combine = (a, b) => ({ ...a, ...b })
     }
 
-    const errors$ = current.errors$.sampledBy(stream, combine)
+    const errors$ = current.errors$.sampledBy(stream, combine).changes()
 
     return this.zipFormParts(
       current.state$.sampledBy(stream),
