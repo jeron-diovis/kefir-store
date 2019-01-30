@@ -130,7 +130,7 @@ class Form extends Model {
     const errors$ = current.errors$.sampledBy(stream, combine).changes()
 
     return this.zipFormParts(
-      current.state$.sampledBy(stream),
+      current.state$.sampledBy(errors$),
       errors$,
       current.status$.sampledBy(errors$).map(resetMetaStatuses)
     )
