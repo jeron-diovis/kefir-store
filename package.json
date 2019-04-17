@@ -1,6 +1,6 @@
 {
   "name": "kefir-store",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "Observable store with handy declarative syntax",
   "keywords": [
     "kefir",
