@@ -31,7 +31,7 @@ const toErrorStream = F.flow(
 const createValidatorOptionsFromProp = prop => ({
   get: CONFIG.getter(prop),
   set: CONFIG.reducer(prop),
-  key: prop,
+  key: CONFIG.reducer(prop),
 })
 
 function ensureHandlersValid(handlers) {
@@ -95,14 +95,14 @@ function parseValidator(x, opts) {
     F.isPlainObject(opts)
     && F.isFunction(opts.get)
     && F.isFunction(opts.set)
-    && F.isString(opts.key)
+    && (F.isString(opts.key) || F.isFunction(opts.key))
   )) {
     throw new Error(`[kefir-store :: form] Incomplete validation config.
       Unless reducer defined as a string, you should define validator with opts:
       [ validatorFn, {
         get: state -> value,
         set: state -> patch -> new_state,
-        key: String,
+        key: String | Function,
       } ]
       Current: ${JSON.stringify(opts)}
     `)
@@ -114,7 +114,7 @@ function parseValidator(x, opts) {
     ap: toErrorStream(result),
     getFromState: opts.get,
     setInvalid: opts.set,
-    setError: CONFIG.reducer(opts.key),
+    setError: F.isString(opts.key) ? CONFIG.reducer(opts.key) : opts.key,
   }
 }
 

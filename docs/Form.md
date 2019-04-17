@@ -190,11 +190,11 @@ form.handlers.validate()
 
 Validator options are responsible for 3 things:
  
-#### `key`: String
+#### `key`: String|function
 
 Describes how to write validation result to `errors` object.
 
-Setter will be created from string by the same logic as [Reducer](/docs/Stream.md#reducer).
+If string, setter will be created from string by the same logic as [Reducer](/docs/Stream.md#reducer).
 
 #### `set`: Function (state, patch) -> new_state
 
